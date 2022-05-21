@@ -42,6 +42,8 @@ if not os.path.isdir('packages'):
     os.mkdir('packages')
 if not os.path.isdir('backup'):
     os.mkdir('backup')
+if not os.path.isdir('zip_packages'):
+    os.mkdir('zip_packages')
 
 while True:
     print("Input the problem index")

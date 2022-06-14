@@ -66,7 +66,7 @@ def make_problem(folder, index=None):
     empty_dir(out_path)
     problem_output_folder = str(out_path.resolve())
 
-    for test in (path / 'tests').glob('*'):
+    for test in (folder / 'tests').glob('*'):
         file_name = f"{problem_idx}_{test.stem}"
         if test.suffix == '.a':
             shutil.copy(test, out_path / file_name)
@@ -90,6 +90,7 @@ def make_problem(folder, index=None):
     print(f"{clang_timelimit=}")
     print(f"{repetitions=}")
     print(f"{memory_limit=}")
+    return
 
     problem_folder = 'packages/Problem_'+problem_idx
     if os.path.isdir(problem_folder):

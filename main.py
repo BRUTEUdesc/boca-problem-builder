@@ -66,7 +66,7 @@ def make_problem(folder, index=None):
     empty_dir(out_path)
     problem_output_folder = str(out_path.resolve())
 
-    for test in (path / 'tests').glob('*'):
+    for test in (folder / 'tests').glob('*'):
         file_name = f"{problem_idx}_{test.stem}"
         if test.suffix == '.a':
             shutil.copy(test, out_path / file_name)

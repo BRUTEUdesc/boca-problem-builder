@@ -59,7 +59,7 @@ def make_problem(folder, index=None):
     empty_dir(inp_path)
     problem_input_folder = str(inp_path.resolve())
 
-    has_description = 'n'
+    has_description = 'y'
 
     out_path = Path("/tmp/boca-problem-builder/output/")
     out_path.mkdir(parents=True, exist_ok=True)

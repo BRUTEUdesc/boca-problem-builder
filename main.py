@@ -1,6 +1,8 @@
 import os
 import shutil
 from distutils.dir_util import copy_tree
+from pathlib import Path
+import xml.etree.ElementTree as ET
 
 def make_limits_clang(problem_folder, timelimit, repetitions, memory_limit):
     limit_files = [open(os.path.join(problem_folder,'limits/c'),'w'),open(os.path.join(problem_folder,'limits/cc'),'w'),open(os.path.join(problem_folder,'limits/cpp'),'w')]
@@ -38,38 +40,56 @@ def make_limits_python(problem_folder, timelimit, repetitions, memory_limit):
         print('echo 1024', file = limit_file)
         print('exit 0', file = limit_file)
 
-if not os.path.isdir('packages'):
-    os.mkdir('packages')
-if not os.path.isdir('backup'):
-    os.mkdir('backup')
-if not os.path.isdir('zip_packages'):
-    os.mkdir('zip_packages')
+def empty_dir(path):
+    for child in path.glob('*'):
+        child.unlink()
 
-while True:
-    print("Input the problem index")
-    problem_idx = input()
-    print("Input the problem name")
-    problem_name = input()
-    print("Do you have a description file? (y/n)")
-    has_description = input()
-    problem_description = ''
-    if (has_description.lower() == 'y'):
-        print("Input the problem description file location")
-        problem_description = input()
-    print("Input the inputs folder location")
-    problem_input_folder = input()
-    print("Input the outputs folder location")
-    problem_output_folder = input()
-    print("Input the timelimit in seconds for clang")
-    clang_timelimit = int(input())
-    print("Input the timelimit in seconds for java")
-    java_timelimit = int(input())
-    print("Input the timelimit in seconds for python")
-    python_timelimit = int(input())
-    print("Input the number of repetitions")
-    repetitions = int(input())
-    print("Input the memory limit in Megabytes")
-    memory_limit = int(input())
+def make_problem(folder, index=None):
+    xml_tree = ET.parse(folder / "problem.xml")
+    xml_root = xml_tree.getroot()
+
+    problem_idx = index if index else folder.stem[0].upper()
+    problem_name = xml_root.find("names")[0].attrib['value']
+
+    statement = (folder / 'statements/.pdf/portuguese/problem.pdf').resolve()
+    problem_description = str(statement)
+
+    inp_path = Path("/tmp/boca-problem-builder/input/")
+    inp_path.mkdir(parents=True, exist_ok=True)
+    empty_dir(inp_path)
+    problem_input_folder = str(inp_path.resolve())
+
+    has_description = 'n'
+
+    out_path = Path("/tmp/boca-problem-builder/output/")
+    out_path.mkdir(parents=True, exist_ok=True)
+    empty_dir(out_path)
+    problem_output_folder = str(out_path.resolve())
+
+    for test in (path / 'tests').glob('*'):
+        file_name = f"{problem_idx}_{test.stem}"
+        if test.suffix == '.a':
+            shutil.copy(test, out_path / file_name)
+        else:
+            shutil.copy(test, inp_path / file_name)
+
+    testset = xml_root.find('judging').find('testset')
+
+    clang_timelimit = int(testset.find('time-limit').text) // 1000
+    java_timelimit = clang_timelimit + 5
+    python_timelimit = java_timelimit + 2
+
+    repetitions = 5
+
+    memory_limit = int(testset.find('memory-limit').text) // 1024**2
+
+    print(f"{problem_idx=}")
+    print(f"{problem_name=}")
+    print(f"{problem_input_folder=}")
+    print(f"{problem_output_folder=}")
+    print(f"{clang_timelimit=}")
+    print(f"{repetitions=}")
+    print(f"{memory_limit=}")
 
     problem_folder = 'packages/Problem_'+problem_idx
     if os.path.isdir(problem_folder):
@@ -97,6 +117,23 @@ while True:
 
     shutil.make_archive('zip_packages/Problem_'+problem_idx, 'zip', problem_folder)
 
-    print("Do you want to build another problem? (y/n)")
-    another_problem = input()
-    if (another_problem.lower() != 'y'): break
+if not os.path.isdir('packages'):
+    os.mkdir('packages')
+if not os.path.isdir('backup'):
+    os.mkdir('backup')
+if not os.path.isdir('zip_packages'):
+    os.mkdir('zip_packages')
+
+def make_contest(contest_path):
+    xml_tree = ET.parse(contest_path / "contest.xml")
+    xml_root = xml_tree.getroot()
+
+    problems = xml_root.find("problems")
+    for p in problems:
+        index = p.attrib['index']
+        name = p.attrib['url'].split('/')[-1]
+        make_problem(contest_path / 'problems' / name, index.upper())
+
+if __name__ == '__main__':
+    path = Path(input("Enter contest path\n"))
+    make_contest(path)

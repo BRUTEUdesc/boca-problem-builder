@@ -59,7 +59,7 @@ def make_problem(folder, index=None):
     empty_dir(inp_path)
     problem_input_folder = str(inp_path.resolve())
 
-    has_description = 'y'
+    has_description = 'n'
 
     out_path = Path("/tmp/boca-problem-builder/output/")
     out_path.mkdir(parents=True, exist_ok=True)
@@ -126,5 +126,5 @@ if not os.path.isdir('zip_packages'):
 
 if __name__ == '__main__':
     path = Path(input("Enter problem path\n"))
-    index = input("Enter problem index. i. e. letter").upper()
+    index = input("Enter problem index. i. e. letter\n").upper()
     make_problem(path, index)

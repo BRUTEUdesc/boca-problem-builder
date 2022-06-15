@@ -90,7 +90,6 @@ def make_problem(folder, index=None):
     print(f"{clang_timelimit=}")
     print(f"{repetitions=}")
     print(f"{memory_limit=}")
-    return
 
     problem_folder = 'packages/Problem_'+problem_idx
     if os.path.isdir(problem_folder):

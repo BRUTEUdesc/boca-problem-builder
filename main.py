@@ -77,7 +77,7 @@ def make_problem(folder, index=None):
 
     clang_timelimit = int(testset.find('time-limit').text) // 1000
     java_timelimit = clang_timelimit + 5
-    python_timelimit = java_timelimit + 2
+    python_timelimit = clang_timelimit + 2
 
     repetitions = 5
 

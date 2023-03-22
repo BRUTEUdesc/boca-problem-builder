@@ -15,15 +15,16 @@ def make_limits_clang(problem_folder, timelimit, repetitions, memory_limit):
         print('exit 0', file = limit_file)
 
 def make_limits_java(problem_folder, timelimit, repetitions, memory_limit):
-    limit_file = open(os.path.join(problem_folder,'limits/java'),'w')
-    print('echo', end = ' ', file = limit_file)
-    print(timelimit, file = limit_file)
-    print('echo', end = ' ', file = limit_file)
-    print(repetitions, file = limit_file)
-    print('echo', end = ' ', file = limit_file)
-    print(memory_limit, file = limit_file)
-    print('echo 1024', file = limit_file)
-    print('exit 0', file = limit_file)
+    limit_files = [open(os.path.join(problem_folder,'limits/java'),'w'), open(os.path.join(problem_folder,'limits/kt'),'w')]
+    for limit_file in limit_files:
+        print('echo', end = ' ', file = limit_file)
+        print(timelimit, file = limit_file)
+        print('echo', end = ' ', file = limit_file)
+        print(repetitions, file = limit_file)
+        print('echo', end = ' ', file = limit_file)
+        print(memory_limit, file = limit_file)
+        print('echo 1024', file = limit_file)
+        print('exit 0', file = limit_file)
 
 
 def make_limits_python(problem_folder, timelimit, repetitions, memory_limit):

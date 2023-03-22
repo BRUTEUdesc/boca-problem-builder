@@ -133,14 +133,14 @@ echo "Current directory is $cdir" >&2
 echo "CODE NOT BEING CHROOTED. DO NOT RUN THIS ON THE MAIN SERVER" >&2
 echo "CODE NOT BEING CHROOTED. DO NOT RUN THIS ON THE MAIN SERVER" >&2
 echo "CODE NOT BEING CHROOTED. DO NOT RUN THIS ON THE MAIN SERVER" >&2
-java=`which java`
-[ -x "$java" ] || java=/usr/bin/java
-if [ ! -x "$java" ]; then
-	echo "$java not found or it's not executable"
+kotlin=`which kotlin`
+[ -x "$kotlin" ] || kotlin=/usr/bin/kotlin
+if [ ! -x "$kotlin" ]; then
+	echo "$kotlin not found or it's not executable"
 	exit 47
 fi
 
-"$sf" -r$nruns -t$time -T$ttime -istdin0 -F512 -u512 -U$bocau -G$bocag -ostdout0 -estderr0 -n0 -C. -d40000000000 -m40000000000 -- "$java" -jar run.jar -J-Xmx${maxm}K -J-Xss${maxms}K -J-Xms${maxm}K
+"$sf" -r$nruns -t$time -T$ttime -istdin0 -F512 -u512 -U$bocau -G$bocag -ostdout0 -estderr0 -n0 -C. -d40000000000 -m40000000000 -- "$kotlin" run.jar -J-Xmx${maxm}K -J-Xss${maxms}K -J-Xms${maxm}K
 #"$kotlin" -cp run.jar -J-Xmx${maxm}K -J-Xss${maxms}K -J-Xms${maxm}K "$name"
 ret=$?
 if [ $ret -gt 10 ]; then

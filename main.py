@@ -3,7 +3,10 @@ import shutil
 from distutils.dir_util import copy_tree
 
 def make_limits_clang(problem_folder, timelimit, repetitions, memory_limit):
-    limit_files = [open(os.path.join(problem_folder,'limits/c'),'w'),open(os.path.join(problem_folder,'limits/cc'),'w'),open(os.path.join(problem_folder,'limits/cpp'),'w')]
+    limit_files = [ open(os.path.join(problem_folder,'limits/c'),'w'),
+                    open(os.path.join(problem_folder,'limits/cc'),'w'),
+                    open(os.path.join(problem_folder,'limits/cpp'),'w'),
+                    open(os.path.join(problem_folder,'limits/rs'),'w')]
     for limit_file in limit_files:
         print('echo', end = ' ', file = limit_file)
         print(timelimit, file = limit_file)

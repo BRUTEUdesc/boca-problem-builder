@@ -108,14 +108,14 @@ fi
 rm -f "$exe" compileit.retcode runit.retcode 2>/dev/null
 cat <<EOF > compileit.sh
 #!/bin/bash
-cc=\`which g++\`
-[ -x "\$cc" ] || cc=/usr/bin/g++
-if [ ! -x "\$cc" ]; then
-    echo "\$cc not found or it's not executable"
+rustc=\`which rustc\`
+[ -x "\$rustc" ] || rustc=/usr/local/cargo/bin/rustc
+if [ ! -x "\$rustc" ]; then
+    echo "\$rustc not found or it's not executable"
     exit 47
 fi
 cd src
-"\$cc" -static -O2 -o "../$exe" "$name" -lm -std=c++17
+"\$rustc" -C target-feature=+crt-static -o "../$exe" "$name" -lm
 echo \$? > ../compileit.retcode
 exit 0
 EOF
@@ -133,6 +133,7 @@ cd "$cdir"
 [ -f /proc/cpuinfo ] || /bin/mount -t proc proc /proc
 #/bin/mount --bind /dev /dev
 [ -d /sys/kernel ] || /bin/mount -t sysfs sysfs /sys
+# rustup default stable
 $sf -r1 -F1000 -n0 -U$bocau -G$bocag -C. -ostdout0 -estderr0 -d$maxm -m$maxm -f20000 -t$ttime -T$ttime ./compileit.sh
 echo \$? > runit.retcode
 if [ ! -d /bocajail ]; then

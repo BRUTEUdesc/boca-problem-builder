@@ -2,3 +2,5 @@ backup
 contest-*
 packages
 zip_*
+.idea
+.DS_Store

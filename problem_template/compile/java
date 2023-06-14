@@ -65,7 +65,7 @@ if [ "$bocau" == "" -o "$bocag" == "" ]; then
 fi
 
 mkdir -p src
-if [ "${name##*.}" == "zip" -a "${name##*.}" == "ZIP" ]; then
+if [ "${name##*.}" == "zip" -o "${name##*.}" == "ZIP" ]; then
 	unzip "$name" -d src
     if [ "${name##*.}" == "zip" ]; then
 		name=`basename $name .zip`
@@ -94,17 +94,14 @@ else
   time=$3
 fi
 let "ttime = $time + 30"
+time=30
 
 maxm=512
 if [ "$4" != "" -a "$4" -gt "512" ]; then
 maxm=$4
 fi
 
-if [ "$2" == "" ]; then
-  jarfile=run.jar
-else
-  jarfile=$2
-fi
+jarfile=run.jar
 
 cdir=`pwd`
 echo "Current directory is $cdir" >&2

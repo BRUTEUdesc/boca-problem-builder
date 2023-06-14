@@ -89,6 +89,8 @@ if __name__ == '__main__':
     problem_name = xml_root.find("names")[0].attrib['value']
 
     problem_description = target_dir + '/statements/.pdf/portuguese/problem.pdf'
+    os.rename(problem_description, target_dir + '/statements/.pdf/portuguese/' + problem_idx + '.pdf')
+    problem_description = target_dir + '/statements/.pdf/portuguese/' + problem_idx + '.pdf'
 
     if not os.path.exists(target_dir + '/inputs'):
         os.mkdir(target_dir + '/inputs')

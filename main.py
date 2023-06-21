@@ -97,30 +97,32 @@ if __name__ == '__main__':
     if not os.path.exists(target_dir + '/outputs'):
         os.mkdir(target_dir + '/outputs')
 
-    for directory in os.listdir(target_dir):
-        if os.path.isdir(os.path.join(target_dir, directory)) and directory.startswith('test'):
-            for file in os.listdir(os.path.join(target_dir, directory)):
-                if file.endswith('.a'):
-                    shutil.copy(os.path.join(target_dir, directory, file), os.path.join(target_dir, 'outputs'))
-                else:
-                    shutil.copy(os.path.join(target_dir, directory, file), os.path.join(target_dir, 'inputs'))
+    dirs = []
+    for element in xml_root.find('judging').findall('testset'):
+        dirs.append(element.attrib['name'])
 
-    for file in os.listdir(target_dir + '/outputs'):
-        file_name = file.split('.')[0]
-        os.rename(os.path.join(target_dir + '/outputs', file), os.path.join(target_dir + '/outputs', file_name))
+    next = 1
+    for directory in dirs:
+        for file in os.listdir(os.path.join(target_dir, directory)):
+            name = ""
+            if file.endswith('.a'):
+                name = file[:-2]
+                shutil.copy(os.path.join(target_dir, directory, file), os.path.join(target_dir, 'outputs', str(next)))
+                shutil.copy(os.path.join(target_dir, directory, name), os.path.join(target_dir, 'inputs', str(next)))
+                next += 1
 
     problem_input_folder = target_dir + '/inputs'
     problem_output_folder = target_dir + '/outputs'
 
     testset = xml_root.find('judging').find('testset')
 
-    clang_timelimit = int(testset.find('time-limit').text)  # 1000
-    java_timelimit = clang_timelimit + 5000
-    python_timelimit = clang_timelimit + 2000
+    clang_timelimit = int(testset.find('time-limit').text) // (1000)  # segundos
+    java_timelimit = clang_timelimit + 5
+    python_timelimit = clang_timelimit + 2
 
     repetitions = 1  # SO MEXE SE PRECISAR
 
-    memory_limit = int(testset.find('memory-limit').text) // (1024 ** 2)
+    memory_limit = int(testset.find('memory-limit').text) // (1024 ** 2) # MB
 
     problem_folder = 'packages/Problem_' + problem_idx
 

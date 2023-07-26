@@ -136,7 +136,7 @@ cd "$cdir"
 #/bin/mount --bind /dev /dev
 [ -d /sys/kernel ] || /bin/mount -t sysfs sysfs /sys
 
-$sf -r1 -t20 -T32 -istdin0 -F512 -u512 -U$bocau -G$bocag -n0 -C. -d40000000000 -m40000000000 ./compileit.sh
+$sf -r1 -t60 -T60 -istdin0 -F512 -u512 -U$bocau -G$bocag -n0 -C. -d40000000000 -m40000000000 ./compileit.sh
 echo \$? > runit.retcode
 if [ ! -d /bocajail ]; then
   /bin/umount /proc 2>/dev/null
@@ -154,7 +154,7 @@ EOF
 else
 	echo "COMPILATION IS NOT BEING CHROOTED -- THIS IS NOT AN IDEAL SETTING"
 	#$kotlinc "$name"
-	$sf -r1 -t20 -T32 -istdin0 -F512 -u512 -U$bocau -G$bocag -n0 -C. -d40000000000 -m40000000000 ./compileit.sh
+	$sf -r1 -t60 -T60 -istdin0 -F512 -u512 -U$bocau -G$bocag -n0 -C. -d40000000000 -m40000000000 ./compileit.sh
 	#./compileit.sh
 	ret=$?
 fi

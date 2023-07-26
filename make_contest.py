@@ -23,9 +23,12 @@ def run_main_script(problem, directory):
         # Find the first file in the polygon_contest_packages directory that starts with the problem letter
         file_list = glob.glob(directory + '/' + problem["PROBLEM LETTER"].lower() + '*')
         if not file_list:
-            print("No file found for problem", problem["PROBLEM LETTER"])
+            print("No file found for problem", problem["PROBLEM LETTER"] + ", skipping...")
             return
-        file_name = file_list[0]  # Use the first matching file
+        if len(file_list) > 1:
+            print("More than one file found for problem", problem["PROBLEM LETTER"] + ", skipping...")
+            return
+        file_name = file_list[0]  # Use the matching file
     else:
         file_name = problem["POLYGON_PACKAGE"]
     command = ["python3", "main.py", problem["PROBLEM LETTER"], file_name]

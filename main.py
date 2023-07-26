@@ -94,6 +94,10 @@ if __name__ == '__main__':
     with zipfile.ZipFile(file_name, 'r') as zip_ref:
         zip_ref.extractall(target_dir)
 
+    if not os.path.exists(target_dir + '/problem.xml'):
+        print("The zip file does not seem to be a polygon package")
+        exit(1)
+
     xml_tree = ET.parse(target_dir + '/problem.xml')
     xml_root = xml_tree.getroot()
 

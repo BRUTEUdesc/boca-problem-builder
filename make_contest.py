@@ -4,10 +4,12 @@ import os
 import json
 import shutil
 import subprocess
+import sys
 from distutils.dir_util import copy_tree
 
 
-def read_contest_file(file_path):
+def read_contest_file(directory):
+    file_path = os.path.join(directory, "contest.json")
     if not os.path.exists(file_path):
         print(file_path, "not found")
         exit(1)
@@ -16,10 +18,10 @@ def read_contest_file(file_path):
     return problems
 
 
-def run_main_script(problem):
+def run_main_script(problem, directory):
     if problem["POLYGON_PACKAGE"] == "DEFAULT":
         # Find the first file in the polygon_contest_packages directory that starts with the problem letter
-        file_list = glob.glob('polygon_contest_packages/' + problem["PROBLEM LETTER"].lower() + '*')
+        file_list = glob.glob(directory + '/' + problem["PROBLEM LETTER"].lower() + '*')
         if not file_list:
             print("No file found for problem", problem["PROBLEM LETTER"])
             return
@@ -48,8 +50,15 @@ def clean_folders():
 
 
 if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print("Usage: python3 make_contest.py {CONTEST DIRECTORY}")
+        exit(1)
+    contest_directory = sys.argv[1]
+    if not os.path.exists(contest_directory):
+        print("The directory", contest_directory, "does not exist")
+        exit(1)
     print("Backuping any existing packages")
     clean_folders()
-    problems = read_contest_file("contest.json")
+    problems = read_contest_file(contest_directory)
     for problem in problems:
-        run_main_script(problem)
+        run_main_script(problem, contest_directory)

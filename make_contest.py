@@ -25,6 +25,9 @@ def run_main_script(problem, directory):
         if not file_list:
             print("No file found for problem", problem["PROBLEM LETTER"] + ", skipping...")
             return
+        for file_name in file_list:
+            if file_name.endswith(".json"):
+                file_list.remove(file_name)
         if len(file_list) > 1:
             print("More than one file found for problem", problem["PROBLEM LETTER"] + ", skipping...")
             return

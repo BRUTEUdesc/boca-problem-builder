@@ -115,7 +115,7 @@ if [ ! -x "\$cc" ]; then
     exit 47
 fi
 cd src
-"\$cc" -static -O2 -o "../$exe" "$name" -lm -std=c++17
+"\$cc" -static -O2 -DONLINE_JUDGE -o "../$exe" "$name" -lm -std=c++17
 echo \$? > ../compileit.retcode
 exit 0
 EOF

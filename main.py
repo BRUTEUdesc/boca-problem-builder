@@ -108,7 +108,20 @@ if __name__ == '__main__':
     if not os.path.exists('zip_packages'):
         os.mkdir('zip_packages')
 
-    problem_name = xml_root.find("names")[0].attrib['value']
+    # <name language="english" value="Another Trip"/>
+    # <name language="portuguese" value="Outra Viagem"/>
+
+    problem_name = None
+
+    for name_element in xml_root.findall('.//names/name'):
+        if name_element.attrib.get('language') == 'english':
+            problem_name = name_element.attrib.get('value')
+            break
+
+    for name_element in xml_root.findall('.//names/name'):
+        if name_element.attrib.get('language') == 'portuguese':
+            problem_name = name_element.attrib.get('value')
+            break
 
     problem_description = target_dir + '/statements/.pdf/portuguese/problem.pdf'
     os.rename(problem_description, target_dir + '/statements/.pdf/portuguese/' + problem_idx + '.pdf')

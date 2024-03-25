@@ -21,20 +21,20 @@ def read_contest_file(directory):
 def run_main_script(problem, directory):
     if problem["POLYGON_PACKAGE"] == "DEFAULT":
         # Find the first file in the polygon_contest_packages directory that starts with the problem letter
-        file_list = glob.glob(directory + '/' + problem["PROBLEM LETTER"].lower() + '*')
+        file_list = glob.glob(directory + '/' + problem["PROBLEM_LETTER"].lower() + '*')
         if not file_list:
-            print("No file found for problem", problem["PROBLEM LETTER"] + ", skipping...")
+            print("No file found for problem", problem["PROBLEM_LETTER"] + ", skipping...")
             return
         for file_name in file_list:
             if file_name.endswith(".json"):
                 file_list.remove(file_name)
         if len(file_list) > 1:
-            print("More than one file found for problem", problem["PROBLEM LETTER"] + ", skipping...")
+            print("More than one file found for problem", problem["PROBLEM_LETTER"] + ", skipping...")
             return
         file_name = file_list[0]  # Use the matching file
     else:
         file_name = problem["POLYGON_PACKAGE"]
-    command = ["python3", "main.py", problem["PROBLEM LETTER"], file_name]
+    command = ["python3", "main.py", problem["PROBLEM_LETTER"], file_name]
     if "JAVA_TL_FACTOR" in problem:
         command.append(str(problem["JAVA_TL_FACTOR"]))
     if "PYTHON_TL_FACTOR" in problem:

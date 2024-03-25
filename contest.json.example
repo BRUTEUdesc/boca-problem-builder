@@ -1,24 +1,24 @@
 [
     {
-        "PROBLEM LETTER": "A",
+        "PROBLEM_LETTER": "A",
         "POLYGON_PACKAGE": "DEFAULT",
         "JAVA_TL_FACTOR": 5,
         "PYTHON_TL_FACTOR": 5
     },
     {
-        "PROBLEM LETTER": "B",
+        "PROBLEM_LETTER": "B",
         "POLYGON_PACKAGE": "/home/user/Downloads/polygon-package.zip",
         "JAVA_TL_FACTOR": 1,
         "PYTHON_TL_FACTOR": 1
     },
     {
-        "PROBLEM LETTER": "C",
+        "PROBLEM_LETTER": "C",
         "POLYGON_PACKAGE": "DEFAULT",
         "JAVA_TL_FACTOR": 3,
         "PYTHON_TL_FACTOR": 3
     },
     {
-        "PROBLEM LETTER": "N",
+        "PROBLEM_LETTER": "N",
         "POLYGON_PACKAGE": "DEFAULT",
         "JAVA_TL_FACTOR": 10,
         "PYTHON_TL_FACTOR": 3

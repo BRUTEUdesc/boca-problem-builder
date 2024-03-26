@@ -4,6 +4,10 @@ Este repositório contém um script Python simples para criar um pacote de probl
 
 ## Como usar
 
+O script recebe um pacote de problema em formato `.zip` gerado pela plataforma Polygon (polygon.codeforces.com). 
+
+Pelo Polygon, na aba `Packages`, gere a versão Full e baixe a opção para Linux.
+
 ### Para gerar um único pacote
 
 Execute o seguinte comando:
@@ -11,7 +15,7 @@ Execute o seguinte comando:
 ```python3 main.py {PROBLEM_LETTER} POLYGON_PACKAGE.zip [java_tl_factor] [python_tl_factor]```
 
 - `PROBLEM_LETTER` é a letra do problema a ser gerado, por exemplo, A, B, C, etc.
-- `POLYGON_PACKAGE.zip` é o arquivo zipado com o problema do Polygon. O arquivo zipado do Polygon deve ter sido gerado na opção "Full" e a versão Linux deve ter sido baixada.
+- `POLYGON_PACKAGE.zip` é o arquivo zipado com o problema do Polygon. O arquivo zipado do Polygon deve ter sido gerado na opção Full e baixado na versão para Linux.
 - `java_tl_factor` e `python_tl_factor` são opcionais e são os fatores de multiplicação do tempo limite de execução para as linguagens Java e Python, respectivamente. O padrão é 1 para ambas.
 
 Por exemplo:
@@ -21,7 +25,7 @@ Após isso, o pacote estará na pasta `packages` e o arquivo zip do pacote para 
 
 ### Para gerar todos os pacotes de um contest
 
-Execute o seguinte comando:
+Crie um diretório contendo todos os pacotes de problemas a serem utilizados em um contest, e então execute o seguinte comando:
 
 ```python3 make_contest.py {CONTEST_DIRECTORY}```
 
@@ -31,4 +35,4 @@ No arquivo `contest.json`, nas opções de `POLYGON_PACKAGE` que estiverem marca
 
 ## Como funciona 
 
-// TODO
+TODO

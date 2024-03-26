@@ -95,7 +95,7 @@ if __name__ == '__main__':
         zip_ref.extractall(target_dir)
 
     if not os.path.exists(target_dir + '/problem.xml'):
-        print("The zip file does not seem to be a polygon package")
+        print("The zip file does not seems to be a polygon package")
         exit(1)
 
     xml_tree = ET.parse(target_dir + '/problem.xml')
@@ -196,6 +196,13 @@ if __name__ == '__main__':
     print("Creating package...\n")
 
     copy_tree('problem_template', problem_folder)
+
+    if os.path.exists(target_dir + '/check.cpp'):
+        shutil.copy("testlib.h", target_dir)
+        compare_path = problem_folder + '/compare'
+        shutil.copy(target_dir + '/check.cpp', compare_path + '/check.cpp')
+        shutil.copy('testlib.h', compare_path + '/testlib.h')
+
     copy_tree(problem_input_folder, os.path.join(problem_folder, 'input'))
     copy_tree(problem_output_folder, os.path.join(problem_folder, 'output'))
     problem_info_file = open(os.path.join(problem_folder, 'description/problem.info'), 'w')

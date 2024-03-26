@@ -30,6 +30,40 @@ if [ ! -r "$1" -o ! -r "$2" ]; then
   exit 43
 fi
 
+cd "$(dirname "$0")"
+
+# Checking if there's a polygon checker and try to use it
+
+if [ ! -f checked_polygon ]; then
+  touch checked_polygon
+  zip_file=$(find .. -maxdepth 1 -type f -name '*.zip' | head -n 1)
+  if [ -f "$zip_file" ]; then 
+    unzip -j "$zip_file" "compare/check.cpp" -d . > /dev/null
+    unzip -j "$zip_file" "compare/testlib.h" -d . > /dev/null
+  fi
+fi
+
+if [ -f check.cpp ] && [ -f testlib.h ]; then
+  if [ ! -x check ]; then
+    g++ -O2 --std=c++17 -o check check.cpp
+  fi
+  if [ -x check ]; then
+    ./check "$3" "$1" "$2"
+    ret=$?
+    if [ "$ret" == "0" ]; then
+      echo "Accepted"
+      exit 4
+    fi
+    if [ "$ret" == "2" ]; then
+      echo "Presentation Error"
+      exit 5
+    fi
+    echo "Wrong Answer"
+    exit 6
+  fi
+fi
+
+
 # Next lines of this script just compares team_output and sol_output,
 # although it is possible to change them to more complex evaluations.
 

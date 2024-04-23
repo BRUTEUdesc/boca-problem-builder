@@ -1,6 +1,8 @@
+venv
 backup
 contest-*
 packages
 zip_*
 .idea
-.DS_Store
+.vscode
+*.DS_Store

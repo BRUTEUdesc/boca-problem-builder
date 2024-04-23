@@ -33,6 +33,7 @@ As configurações do contest devem ser feitas no arquivo `CONTEST_DIRECTORY/con
 
 No arquivo `contest.json`, nas opções de `POLYGON_PACKAGE` que estiverem marcadas como `DEFAULT` (ou seja, não tiverem um caminho especificado), o script procurará no diretório `CONTEST_DIRECTORY` um arquivo zip que começa com a letra do problema. Por exemplo, se o problema for A, o script procurará por `a*.zip`.
 
-## Como funciona 
+## Sobre o pacote gerado
 
-TODO
+O pacote gerado é um pacote pronto para ser utilizado no sistema de competições BOCA, testado na versão mais recente do BOCA (1.15.19+), mas deve funcionar na maioria.
+As linguagens aceitas para submissão são C, C++, Java, Kotlin e Python 3. O tempo limite de execução para cada problema é o mesmo que o tempo limite de execução do Polygon, multiplicado pelo fator especificado no script. O limite de memória é o mesmo que o do Polygon.

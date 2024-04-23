@@ -6,50 +6,53 @@ import shutil
 from distutils.dir_util import copy_tree
 import zipfile
 import sys
-import xml.etree.ElementTree as ET
+import xml.etree.ElementTree as eT
 
 
-def make_limits_clang(problem_folder, timelimit, repetitions, memory_limit):
+def make_limits(problem_folder, repetitions, memory_limit, clang_timelimit, java_timelimit, python_timelimit):
     limit_files = [open(os.path.join(problem_folder, 'limits/c'), 'w'),
                    open(os.path.join(problem_folder, 'limits/cc'), 'w'),
                    open(os.path.join(problem_folder, 'limits/cpp'), 'w'),
+                   open(os.path.join(problem_folder, 'limits/java'), 'w'),
+                   open(os.path.join(problem_folder, 'limits/kt'), 'w'),
+                   open(os.path.join(problem_folder, 'limits/py2'), 'w'),
+                   open(os.path.join(problem_folder, 'limits/py3'), 'w'),
                    open(os.path.join(problem_folder, 'limits/rs'), 'w')]
     for limit_file in limit_files:
-        print('echo', end=' ', file=limit_file)
-        print(timelimit, file=limit_file)
-        print('echo', end=' ', file=limit_file)
-        print(repetitions, file=limit_file)
-        print('echo', end=' ', file=limit_file)
-        print(memory_limit, file=limit_file)
+        print('#!/bin/bash', file=limit_file)
+
+        print('# this executable shall output the number of second of timelimit in the first line, for the given problem and with language according to this filename', file=limit_file)
+        timelimit = 0
+        clang_languages = ['c', 'cc', 'cpp', 'rs']
+        java_languages = ['java', 'kt']
+        python_languages = ['py2', 'py3']
+        limit_file_extension = os.path.basename(limit_file.name)
+        if limit_file_extension in clang_languages:
+            timelimit = clang_timelimit
+        elif limit_file_extension in java_languages:
+            timelimit = java_timelimit
+        elif limit_file_extension in python_languages:
+            timelimit = python_timelimit
+        else:
+            print('Unknown language', limit_file_extension)
+            exit(1)
+        print('echo ' + str(timelimit), file=limit_file)
+
+        if timelimit == 0:
+            print('Timelimit is 0, something went wrong')
+            exit(1)
+
+        print('# and the number of repetitions to run within the given timelimit in the second line', file=limit_file)
+        print('echo ' + str(repetitions), file=limit_file)
+
+        print('# and the maximum amount of memory per repetition in the third line (in Mbytes)', file=limit_file)
+        print('echo ' + str(memory_limit), file=limit_file)
+
+        print('# and the maximum file size in the fourth line (in kbytes)', file=limit_file)
         print('echo 1024', file=limit_file)
-        print('exit 0', file=limit_file)
 
-
-def make_limits_java(problem_folder, timelimit, repetitions, memory_limit):
-    limit_files = [open(os.path.join(problem_folder, 'limits/java'), 'w'),
-                   open(os.path.join(problem_folder, 'limits/kt'), 'w')]
-    for limit_file in limit_files:
-        print('echo', end=' ', file=limit_file)
-        print(timelimit, file=limit_file)
-        print('echo', end=' ', file=limit_file)
-        print(repetitions, file=limit_file)
-        print('echo', end=' ', file=limit_file)
-        print(memory_limit, file=limit_file)
-        print('echo 1024', file=limit_file)
-        print('exit 0', file=limit_file)
-
-
-def make_limits_python(problem_folder, timelimit, repetitions, memory_limit):
-    limit_files = [open(os.path.join(problem_folder, 'limits/py3'), 'w'),
-                   open(os.path.join(problem_folder, 'limits/py2'), 'w')]
-    for limit_file in limit_files:
-        print('echo', end=' ', file=limit_file)
-        print(timelimit, file=limit_file)
-        print('echo', end=' ', file=limit_file)
-        print(repetitions, file=limit_file)
-        print('echo', end=' ', file=limit_file)
-        print(memory_limit, file=limit_file)
-        print('echo 1024', file=limit_file)
+        # and shall return zero to indicate no failure
+        print('# and shall return zero to indicate no failure', file=limit_file)
         print('exit 0', file=limit_file)
 
 
@@ -98,7 +101,7 @@ if __name__ == '__main__':
         print("The zip file does not seems to be a polygon package")
         exit(1)
 
-    xml_tree = ET.parse(target_dir + '/problem.xml')
+    xml_tree = eT.parse(target_dir + '/problem.xml')
     xml_root = xml_tree.getroot()
 
     if not os.path.exists('packages'):
@@ -136,19 +139,17 @@ if __name__ == '__main__':
 
     print("Copying input and output files to temporary folder...\n")
 
-    next_id = 1
     for directory in dirs:
         for file in os.listdir(os.path.join(target_dir, directory)):
             if file.endswith('.a'):  # output
                 file_input = file[:-2]  # removes .a
+                file_name = str(file_input)
 
                 shutil.copy(os.path.join(target_dir, directory, file),
-                            os.path.join(target_dir, 'output', str(next_id)))
+                            os.path.join(target_dir, 'output', file_name))
 
                 shutil.copy(os.path.join(target_dir, directory, file_input),
-                            os.path.join(target_dir, 'input', str(next_id)))
-
-                next_id += 1
+                            os.path.join(target_dir, 'input', file_name))
 
     problem_input_folder = target_dir + '/input'
     problem_output_folder = target_dir + '/output'
@@ -171,7 +172,7 @@ if __name__ == '__main__':
         total_testing_time = clang_timelimit * repetitions
         print("Total testing time is " + str(total_testing_time) + "s")
         if total_testing_time > 10:
-            print("[WARNING] Problem " + problem_idx + " with testing time greater than 10 seconds!\n")
+            print("[WARNING] Problem " + problem_idx + " with testing time limit greater than 10 seconds!\n")
         else:
             print()
 
@@ -197,11 +198,10 @@ if __name__ == '__main__':
 
     copy_tree('problem_template', problem_folder)
 
-    if os.path.exists(target_dir + '/check.cpp'):
-        shutil.copy("testlib.h", target_dir)
+    if os.path.exists(target_dir + '/check.cpp') and os.path.exists(target_dir + 'files/testlib.h'):
         compare_path = problem_folder + '/compare'
         shutil.copy(target_dir + '/check.cpp', compare_path + '/check.cpp')
-        shutil.copy('testlib.h', compare_path + '/testlib.h')
+        shutil.copy(target_dir + 'files/testlib.h', compare_path + '/testlib.h')
 
     copy_tree(problem_input_folder, os.path.join(problem_folder, 'input'))
     copy_tree(problem_output_folder, os.path.join(problem_folder, 'output'))
@@ -211,9 +211,7 @@ if __name__ == '__main__':
     print('descfile=' + problem_description.split('/')[-1], file=problem_info_file)
     shutil.copy(problem_description, os.path.join(problem_folder, 'description/.'))
     problem_info_file.close()
-    make_limits_clang(problem_folder, clang_timelimit, repetitions, memory_limit)
-    make_limits_java(problem_folder, java_timelimit, repetitions, memory_limit)
-    make_limits_python(problem_folder, python_timelimit, repetitions, memory_limit)
+    make_limits(problem_folder, repetitions, memory_limit, clang_timelimit, java_timelimit, python_timelimit)
 
     print("Zipping package...\n")
 

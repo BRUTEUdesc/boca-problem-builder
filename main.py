@@ -205,6 +205,10 @@ if __name__ == '__main__':
 
     copy_tree(problem_input_folder, os.path.join(problem_folder, 'input'))
     copy_tree(problem_output_folder, os.path.join(problem_folder, 'output'))
+
+    if not os.path.exists(problem_folder + '/description'):
+        os.mkdir(problem_folder + '/description')
+
     problem_info_file = open(os.path.join(problem_folder, 'description/problem.info'), 'w')
     print('basename=' + problem_idx, file=problem_info_file)
     print('fullname=' + problem_name, file=problem_info_file)

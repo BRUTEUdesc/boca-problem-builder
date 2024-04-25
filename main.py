@@ -19,9 +19,6 @@ def make_limits(problem_folder, repetitions, memory_limit, clang_timelimit, java
                    open(os.path.join(problem_folder, 'limits/py3'), 'w'),
                    open(os.path.join(problem_folder, 'limits/rs'), 'w')]
     for limit_file in limit_files:
-        print('#!/bin/bash', file=limit_file)
-
-        print('# this executable shall output the number of second of timelimit in the first line, for the given problem and with language according to this filename', file=limit_file)
         timelimit = 0
         clang_languages = ['c', 'cc', 'cpp', 'rs']
         java_languages = ['java', 'kt']
@@ -37,22 +34,12 @@ def make_limits(problem_folder, repetitions, memory_limit, clang_timelimit, java
             print('Unknown language', limit_file_extension)
             exit(1)
         print('echo ' + str(timelimit), file=limit_file)
-
         if timelimit == 0:
             print('Timelimit is 0, something went wrong')
             exit(1)
-
-        print('# and the number of repetitions to run within the given timelimit in the second line', file=limit_file)
         print('echo ' + str(repetitions), file=limit_file)
-
-        print('# and the maximum amount of memory per repetition in the third line (in Mbytes)', file=limit_file)
         print('echo ' + str(memory_limit), file=limit_file)
-
-        print('# and the maximum file size in the fourth line (in kbytes)', file=limit_file)
         print('echo 1024', file=limit_file)
-
-        # and shall return zero to indicate no failure
-        print('# and shall return zero to indicate no failure', file=limit_file)
         print('exit 0', file=limit_file)
 
 
@@ -111,9 +98,6 @@ if __name__ == '__main__':
     if not os.path.exists('zip_packages'):
         os.mkdir('zip_packages')
 
-    # <name language="english" value="Another Trip"/>
-    # <name language="portuguese" value="Outra Viagem"/>
-
     problem_name = None
 
     for name_element in xml_root.findall('.//names/name'):
@@ -139,17 +123,19 @@ if __name__ == '__main__':
 
     print("Copying input and output files to temporary folder...\n")
 
+    it = 1
     for directory in dirs:
         for file in os.listdir(os.path.join(target_dir, directory)):
             if file.endswith('.a'):  # output
                 file_input = file[:-2]  # removes .a
-                file_name = str(file_input)
+                file_name = str(file_input) + '.' + str(it)
 
                 shutil.copy(os.path.join(target_dir, directory, file),
                             os.path.join(target_dir, 'output', file_name))
 
                 shutil.copy(os.path.join(target_dir, directory, file_input),
                             os.path.join(target_dir, 'input', file_name))
+        it += 1
 
     problem_input_folder = target_dir + '/input'
     problem_output_folder = target_dir + '/output'
@@ -198,10 +184,10 @@ if __name__ == '__main__':
 
     copy_tree('problem_template', problem_folder)
 
-    if os.path.exists(target_dir + '/check.cpp') and os.path.exists(target_dir + 'files/testlib.h'):
+    if os.path.exists(target_dir + '/check.cpp') and os.path.exists(target_dir + '/files/testlib.h'):
         compare_path = problem_folder + '/compare'
         shutil.copy(target_dir + '/check.cpp', compare_path + '/check.cpp')
-        shutil.copy(target_dir + 'files/testlib.h', compare_path + '/testlib.h')
+        shutil.copy(target_dir + '/files/testlib.h', compare_path + '/testlib.h')
 
     copy_tree(problem_input_folder, os.path.join(problem_folder, 'input'))
     copy_tree(problem_output_folder, os.path.join(problem_folder, 'output'))

@@ -20,17 +20,18 @@
 # This script receives:
 # $1 team_output
 # $2 sol_output
-# $3 problem_input (might be used by some specific checkers, here it is not)
+# $3 problem_input (might be used by some specific checkers)
 #
 # BOCA reads the last line of the standard output
 # and pass it to judges
 #
-if [ ! -r "$1" -o ! -r "$2" ]; then
+
+if [ ! -r "$1" ] || [ ! -r "$2" ]; then
   echo "Parameter problem"
   exit 43
 fi
 
-cd "$(dirname "$0")"
+cd "$(dirname "$0")" || exit 46
 
 # Checking if there's a polygon checker and try to use it
 

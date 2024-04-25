@@ -102,11 +102,7 @@ fi
 
 maxms=100
 
-if [ "$2" == "" ]; then
-  jarfile=run.jar
-else
-  jarfile=$2
-fi
+jarfile=run.jar
 
 cdir=`pwd`
 echo "Current directory is $cdir" >&2
@@ -119,6 +115,7 @@ cat <<EOF > compileit.sh
 #!/bin/bash
 kotlinc=/snap/kotlin/24/bin/kotlinc
 [ -x "\$kotlinc" ] || kotlinc=/snap/bin/kotlinc
+[ -x "\$kotlinc" ] || kotlinc=/opt/kotlinc/bin/kotlinc
 if [ ! -x \$kotlinc ]; then
     echo "\$kotlinc not found or it's not executable"
     exit 47
@@ -131,11 +128,39 @@ exit 0
 EOF
 chmod 755 compileit.sh
 
-echo "COMPILATION IS NOT BEING CHROOTED -- THIS IS NOT AN IDEAL SETTING"
-#$kotlinc "$name"
-$sf -r1 -t20 -T32 -istdin0 -F512 -u512 -U$bocau -G$bocag -n0 -C. -d40000000000 -m40000000000 ./compileit.sh
-#./compileit.sh
-ret=$?
+echo $cdir | grep -q "/bocajail"
+if [ $? == 0 ]; then
+    cdir=`echo $cdir | sed "s/.*\/bocajail//"`
+    cat <<EOF > runit.sh
+#!/bin/bash
+cd "$cdir"
+[ -f /proc/cpuinfo ] || /bin/mount -t proc proc /proc
+#/bin/mount --bind /dev /dev
+[ -d /sys/kernel ] || /bin/mount -t sysfs sysfs /sys
+
+$sf -r1 -t60 -T60 -istdin0 -F512 -u512 -U$bocau -G$bocag -n0 -C. -d40000000000 -m40000000000 ./compileit.sh
+echo \$? > runit.retcode
+if [ ! -d /bocajail ]; then
+  /bin/umount /proc 2>/dev/null
+  #/bin/umount /dev
+  /bin/umount /sys 2>/dev/null
+fi
+EOF
+    chmod 755 runit.sh
+    chroot /bocajail "$cdir/runit.sh"
+    if [ -r runit.retcode ]; then
+    	ret=`cat runit.retcode`
+    else
+		ret=99
+    fi
+else
+	echo "COMPILATION IS NOT BEING CHROOTED -- THIS IS NOT AN IDEAL SETTING"
+	#$kotlinc "$name"
+	$sf -r1 -t60 -T60 -istdin0 -F512 -u512 -U$bocau -G$bocag -n0 -C. -d40000000000 -m40000000000 ./compileit.sh
+	#./compileit.sh
+	ret=$?
+fi
+
 if [ -f "stdout0" ]; then
 	cat "stdout0"
 fi

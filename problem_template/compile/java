@@ -101,11 +101,7 @@ if [ "$4" != "" -a "$4" -gt "512" ]; then
 maxm=$4
 fi
 
-if [ "$2" == "" ]; then
-  jarfile=run.jar
-else
-  jarfile=$2
-fi
+jarfile=run.jar
 
 cdir=`pwd`
 echo "Current directory is $cdir" >&2

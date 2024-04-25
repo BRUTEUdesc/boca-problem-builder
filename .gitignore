@@ -1,5 +1,5 @@
 venv
-backup
+backups
 contest-*
 packages
 __pycache__

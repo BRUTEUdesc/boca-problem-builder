@@ -4,7 +4,7 @@ Este repositório contém um script Python simples para criar um pacote de probl
 
 ## Como usar
 
-O script recebe um pacote de problema em formato `.zip` gerado pela plataforma Polygon (polygon.codeforces.com). 
+O script recebe um pacote de problema em formato `.zip` gerado pela plataforma [Polygon](https://polygon.codeforces.com). 
 
 Pelo Polygon, na aba `Packages`, gere a versão Full e baixe a opção para Linux.
 

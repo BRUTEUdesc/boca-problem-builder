@@ -101,7 +101,7 @@ def validate_arguments(args):
     try:
         # Check minimum number of arguments
         if len(args) < 3:
-            raise ValueError("Usage: python3 main.py PROBLEM_LETTER POLYGON_PACKAGE.zip [java_tl_factor] ["
+            raise ValueError("Usage: python3 make_from_full_package.py PROBLEM_LETTER POLYGON_PACKAGE.zip [java_tl_factor] ["
                              "python_tl_factor]")
 
         problem_idx = args[1]

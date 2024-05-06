@@ -6,7 +6,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
-import main
+import make_from_full_package
 
 def read_contest_file(directory):
     """Reads the contest configuration from a JSON file."""
@@ -31,11 +31,11 @@ def find_polygon_package(directory, problem):
     return problem["POLYGON_PACKAGE"]
 
 def run_main_script(problem, directory):
-    """Executes the main.py script for a given problem."""
+    """Executes the make_from_full_package.py script for a given problem."""
     file_name = find_polygon_package(directory, problem)
     if not file_name:
         return
-    command = ["python3", "main.py", problem["PROBLEM_LETTER"], file_name]
+    command = ["python3", "make_from_full_package.py", problem["PROBLEM_LETTER"], file_name]
     command.extend(str(problem[f"{lang}_TL_FACTOR"]) for lang in ("JAVA", "PYTHON") if f"{lang}_TL_FACTOR" in problem)
     subprocess.run(command)
 
@@ -53,11 +53,11 @@ def clean_folders():
             if folder_path.is_dir():  # Make sure it's a directory
                 problem_idx = folder_path.name.split('_')[-1]
                 # Call the backup function from main
-                main.backup(str(folder_path), str(backup_base), problem_idx)
+                make_from_full_package.backup(str(folder_path), str(backup_base), problem_idx)
                 shutil.rmtree(folder_path)
 
 if __name__ == "__main__":
-    main.check_run_directory()
+    make_from_full_package.check_run_directory()
     if len(sys.argv) < 2:
         sys.exit("Usage: python3 make_contest.py {CONTEST DIRECTORY}")
     contest_directory = sys.argv[1]

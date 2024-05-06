@@ -12,14 +12,14 @@ Pelo Polygon, na aba `Packages`, gere a versão Full e baixe a opção para Linu
 
 Execute o seguinte comando:
 
-```python3 main.py PROBLEM_LETTER POLYGON_PACKAGE.zip [java_tl_factor] [python_tl_factor]```
+```python3 make_from_full_package.py PROBLEM_LETTER POLYGON_PACKAGE.zip [java_tl_factor] [python_tl_factor]```
 
 - `PROBLEM_LETTER` é a letra do problema a ser gerado, por exemplo, A, B, C, etc. Deve ser uma letra maiúscula.
 - `POLYGON_PACKAGE.zip` é o arquivo zipado com o problema do Polygon. O arquivo zipado do Polygon deve ter sido gerado na opção Full e baixado na versão para Linux.
 - `java_tl_factor` e `python_tl_factor` são opcionais e são os fatores de multiplicação do tempo limite de execução para as linguagens Java e Python, respectivamente. O padrão é 1 para ambas.
 
 Por exemplo:
-```python3 main.py A POLYGON_PACKAGE.zip```
+```python3 make_from_full_package.py A POLYGON_PACKAGE.zip```
 
 Após isso, o pacote estará na pasta `packages` e o arquivo zip do pacote para ser importado no BOCA será gerado na pasta `zip_packages`.
 

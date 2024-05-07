@@ -55,10 +55,10 @@ if [ -f check.cpp ] && [ -f testlib.h ]; then
       echo "Accepted"
       exit 4
     fi
-    if [ "$ret" == "2" ]; then
-      echo "Presentation Error"
-      exit 5
-    fi
+    # if [ "$ret" == "2" ]; then
+    #   echo "Presentation Error"
+    #   exit 5
+    # fi
     echo "Wrong Answer"
     exit 6
   fi

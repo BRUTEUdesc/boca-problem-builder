@@ -327,9 +327,9 @@ def make_description(polygon_folder, xml_root, problem_folder, problem_idx):
         # Create and write to the problem.info file
         info_file_path = os.path.join(description_folder, 'problem.info')
         with open(info_file_path, 'w') as problem_info_file:
-            print(f'basename={problem_idx}', file=problem_info_file)
-            print(f'fullname={problem_name}', file=problem_info_file)
-            print(f'descfile={problem_idx}.pdf', file=problem_info_file)
+            print(f'basename="{problem_idx}"', file=problem_info_file)
+            print(f'fullname="{problem_name}"', file=problem_info_file)
+            print(f'descfile="{problem_idx}.pdf"', file=problem_info_file)
 
         # Copy the problem statement PDF to the description folder
         copy(problem_pdf_path, description_folder + '/' + problem_idx + '.pdf')

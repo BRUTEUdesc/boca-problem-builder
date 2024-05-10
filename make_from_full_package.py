@@ -73,11 +73,14 @@ def make_limits(limits_folder, repetitions, memory_limit, clang_timelimit, java_
                 timelimit = time_limits.get(ext, None)
                 if timelimit is None:
                     raise ValueError(f"Unknown language extension: {ext}")
+
                 # Write the limits
-                limit_file.write(f"echo {timelimit}\n")
-                limit_file.write(f"echo {repetitions}\n")
+                # limit_file.write(f"echo {timelimit}\n") # keeps the polygon timelimit
+                # limit_file.write(f"echo {repetitions}\n") # keeps the polygon timelimit
+                limit_file.write(f"echo {timelimit * 2}\n") # adjust the timelimit to UDESC's BOCA AutoJudge
+                limit_file.write(f"echo {repetitions * 3}\n") # ajust the repetitions to UDESC's BOCA AutoJudge
                 limit_file.write(f"echo {memory_limit}\n")
-                limit_file.write("echo 1024\n")
+                limit_file.write("echo 15360\n")
                 limit_file.write("exit 0\n")
     except Exception as e:
         print("Error:", e)

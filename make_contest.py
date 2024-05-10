@@ -35,8 +35,8 @@ def run_main_script(problem, directory):
     file_name = find_polygon_package(directory, problem)
     if not file_name:
         return
-    command = ["python3", "make_from_full_package.py", problem["PROBLEM_LETTER"], file_name]
-    command.extend(str(problem[f"{lang}_TL_FACTOR"]) for lang in ("JAVA", "PYTHON") if f"{lang}_TL_FACTOR" in problem)
+    command = ["python3", "make_from_full_package.py", str(problem["PROBLEM_LETTER"]), file_name,
+               str(problem["JAVA_TL_FACTOR"]), str(problem["PYTHON_TL_FACTOR"])]
     subprocess.run(command)
 
 def clean_folders():

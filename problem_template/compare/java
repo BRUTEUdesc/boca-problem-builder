@@ -40,6 +40,7 @@ if [ ! -f checked_polygon ]; then
   zip_file=$(find .. -maxdepth 1 -type f -name '*.zip' | head -n 1)
   if [ -f "$zip_file" ]; then 
     unzip -j "$zip_file" "compare/check.cpp" -d . > /dev/null
+    unzip -j "$zip_file" "compare/check" -d . > /dev/null
     unzip -j "$zip_file" "compare/testlib.h" -d . > /dev/null
   fi
 fi

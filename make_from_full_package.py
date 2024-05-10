@@ -440,6 +440,9 @@ if __name__ == '__main__':
     compare_folder = problem_folder + '/compare'
     if os.path.exists(polygon_folder + '/check.cpp') and os.path.exists(polygon_folder + '/files/testlib.h'):
         copy(polygon_folder + '/check.cpp', compare_folder + '/check.cpp')
+        if sys.platform == 'linux':
+            if shutil.which('g++') is not None:
+                os.system(f"g++ -O2 --std=c++17 {compare_folder}/check.cpp -o {compare_folder}/check")
         copy(polygon_folder + '/files/testlib.h', compare_folder + '/testlib.h')
 
     print("Creating description files...\n")

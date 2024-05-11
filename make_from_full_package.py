@@ -75,10 +75,8 @@ def make_limits(limits_folder, repetitions, memory_limit, clang_timelimit, java_
                     raise ValueError(f"Unknown language extension: {ext}")
 
                 # Write the limits
-                # limit_file.write(f"echo {timelimit}\n") # keeps the polygon timelimit
-                # limit_file.write(f"echo {repetitions}\n") # keeps the polygon timelimit
-                limit_file.write(f"echo {timelimit * 2}\n") # adjust the timelimit to UDESC's BOCA AutoJudge
-                limit_file.write(f"echo {repetitions * 3}\n") # ajust the repetitions to UDESC's BOCA AutoJudge
+                limit_file.write(f"echo {timelimit}\n") # keeps the polygon timelimit
+                limit_file.write(f"echo {repetitions}\n") # keeps the polygon timelimit
                 limit_file.write(f"echo {memory_limit}\n")
                 limit_file.write("echo 15360\n")
                 limit_file.write("exit 0\n")
@@ -443,7 +441,12 @@ if __name__ == '__main__':
         copy(polygon_folder + '/files/testlib.h', compare_folder + '/testlib.h')
         if sys.platform == 'linux':
             if which('g++') is not None:
+                print("Compiling checker locally...\n")
                 os.system(f"g++ -O2 --std=c++17 {compare_folder}/check.cpp -o {compare_folder}/check")
+        elif which('linux_compile') is not None:
+            print("Compiling checker remotely...\n")
+            os.system(f"linux_compile {compare_folder}/check.cpp")
+
 
     print("Creating description files...\n")
     # Copy problem statement PDF to description folder and create problem.info file

@@ -6,9 +6,9 @@ Este repositório contém um script Python simples para criar um pacote de probl
 
 O script recebe um pacote de problema em formato `.zip` gerado pela plataforma [Polygon](https://polygon.codeforces.com). 
 
-Pelo Polygon, na aba `Packages`, gere a versão Full e baixe a opção para Linux.
+Pelo Polygon, na aba `Packages`, gere a opção Full e baixe a opção para Linux.
 
-### Para gerar um único pacote
+### Para criar o pacote de um único problema
 
 Execute o seguinte comando:
 
@@ -19,19 +19,19 @@ Execute o seguinte comando:
 - `java_tl_factor` e `python_tl_factor` são opcionais e são os fatores de multiplicação do tempo limite de execução para as linguagens Java e Python, respectivamente. O padrão é 1 para ambas.
 
 Por exemplo:
-```python3 make_from_full_package.py A POLYGON_PACKAGE.zip```
+```python3 make_from_full_package.py A aluguel-de-filmes-13$linux.zip```
 
-Após isso, o pacote estará na pasta `packages` e o arquivo zip do pacote para ser importado no BOCA será gerado na pasta `zip_packages`.
+Após isso, o pacote estará na pasta `packages` e o arquivo zip do pacote para ser importado no BOCA estará na pasta `zip_packages`.
 
 ### Para gerar todos os pacotes de um contest
 
 Crie um diretório contendo todos os pacotes de problemas a serem utilizados em um contest, e então execute o seguinte comando:
 
-```python3 make_contest.py {CONTEST_DIRECTORY}```
+```python3 make_contest.py /path/to/contest/```
 
-As configurações do contest devem ser feitas no arquivo `CONTEST_DIRECTORY/contest.json`. O arquivo `contest.json.example` mostra um exemplo de como deve ser feito.
+As configurações do contest devem ser feitas no arquivo `/path/to/contest/contest.json`. O arquivo `contest.json.example` mostra um exemplo de como deve ser feito.
 
-No arquivo `contest.json`, nas opções de `POLYGON_PACKAGE` que estiverem marcadas como `DEFAULT` (ou seja, não tiverem um caminho especificado), o script procurará no diretório `CONTEST_DIRECTORY` um arquivo zip que começa com a letra do problema. Por exemplo, se o problema for A, o script procurará por `a*.zip`.
+No arquivo `contest.json`, nas opções de `POLYGON_PACKAGE` que estiverem marcadas como `DEFAULT` (ou seja, não tiverem um caminho especificado), o script procurará no diretório `/path/to/contest/` um arquivo zip que começa com a letra do problema. Por exemplo, se o problema for A, o script procurará por `a*.zip`.
 
 ## Sobre o pacote gerado
 

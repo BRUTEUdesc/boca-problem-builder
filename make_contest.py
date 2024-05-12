@@ -59,7 +59,7 @@ def clean_folders():
 if __name__ == "__main__":
     make_from_full_package.check_run_directory()
     if len(sys.argv) < 2:
-        sys.exit("Usage: python3 make_contest.py {CONTEST DIRECTORY}")
+        sys.exit("Usage: python3 make_contest.py /path/to/contest/")
     contest_directory = sys.argv[1]
     if not os.path.exists(contest_directory):
         sys.exit(f"The directory {contest_directory} does not exist")

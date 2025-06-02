@@ -297,6 +297,7 @@ def get_problem_name(xml_root):
                 break
         if problem_name is None:
             raise ValueError("Problem name not found in the XML file.")
+        problem_name = problem_name.replace(r'\&', '&')
         return problem_name
     except Exception as e:
         print("Error:", e)

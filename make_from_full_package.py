@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
+import atexit
 from datetime import datetime
 
 from math import gcd
-from shutil import rmtree, copy, copytree, make_archive, which
-import zipfile
 import sys
 import os
 import xml.etree.ElementTree as eT
+import tempfile
+import zipfile
+from shutil import rmtree, copy, copytree, make_archive
 
 
 def ensure_dir_exists(directory):
@@ -367,6 +369,19 @@ def check_run_directory():
         sys.exit(1)
 
 
+def create_workspace(problem_idx):
+    """
+    Creates an isolated temporary workspace for a single conversion run.
+    """
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+    temp_root = tempfile.mkdtemp(prefix=f"boca_problem_{problem_idx}_{timestamp}_", dir='/tmp')
+    problem_folder = temp_root + "/Problem_" + problem_idx
+    polygon_folder = temp_root + '/polygon_package'
+    os.makedirs(problem_folder)
+    os.makedirs(polygon_folder)
+    return temp_root, problem_folder, polygon_folder
+
+
 if __name__ == '__main__':
     """
     Main entry point of the script. Parses command line arguments, performs initial setup,
@@ -388,18 +403,17 @@ if __name__ == '__main__':
 
     problem_idx, file_name, java_tl_factor, python_tl_factor = validate_arguments(sys.argv)
 
-    problem_folder = "/tmp/Problem_" + problem_idx
-    polygon_folder = '/tmp/polygon_package'
-    clean_directory(problem_folder)
-    clean_directory(polygon_folder)
-
     ensure_dir_exists('packages')
     packages_folder = 'packages/Problem_' + problem_idx
 
     ensure_dir_exists('backups')
     ensure_dir_exists('zip_packages')
+    output_zip = 'zip_packages/Problem_' + problem_idx + '.zip'
+    temp_root, problem_folder, polygon_folder = create_workspace(problem_idx)
+    atexit.register(rmtree, temp_root, ignore_errors=True)
+    if os.path.exists(output_zip):
+        os.remove(output_zip)
 
-    ensure_dir_exists(problem_folder)
     for folder in os.listdir('problem_template'):
         copytree('problem_template/' + folder, problem_folder + '/' + folder)
     ensure_dir_exists(problem_folder + '/input')
@@ -408,8 +422,6 @@ if __name__ == '__main__':
     ensure_dir_exists(problem_folder + '/limits')
     ensure_dir_exists(problem_folder + '/compare')
     ensure_dir_exists(problem_folder + '/run')
-
-    ensure_dir_exists(polygon_folder)
 
     print("\n========================================\n")
     print("Making problem " + problem_idx + " from " + file_name)
@@ -434,38 +446,26 @@ if __name__ == '__main__':
     limits_folder = problem_folder + '/limits'
     make_limits(limits_folder, repetitions, memory_limit, clang_timelimit, java_timelimit, python_timelimit)
 
-    print("Creating checker...\n")
-    # Copy checker files to compare folder to accept custom checkers
+    print("Copying checker sources...\n")
     compare_folder = problem_folder + '/compare'
-    if os.path.exists(polygon_folder + '/check.cpp') and os.path.exists(polygon_folder + '/files/testlib.h'):
-        copy(polygon_folder + '/check.cpp', compare_folder + '/check.cpp')
-        copy(polygon_folder + '/files/testlib.h', compare_folder + '/testlib.h')
-        if sys.platform == 'linux':
-            if which('g++') is not None:
-                print("Compiling checker locally...\n")
-                os.system(f"g++ -O2 --std=c++17 {compare_folder}/check.cpp -o {compare_folder}/check")
-        elif which('linux_compile') is not None:
-            print("Compiling checker remotely...\n")
-            os.system(f"linux_compile {compare_folder}/check.cpp")
-
+    copy(polygon_folder + '/check.cpp', compare_folder + '/check.cpp')
+    copy(polygon_folder + '/files/testlib.h', compare_folder + '/testlib.h')
 
     print("Creating description files...\n")
-    # Copy problem statement PDF to description folder and create problem.info file
     make_description(polygon_folder, xml_root, problem_folder, problem_idx)
 
     if os.path.exists(packages_folder):
         print("Backing up previous package...\n")
         backup(packages_folder, 'backups', problem_idx)
-        if os.path.exists('zip_packages/Problem_' + problem_idx + '.zip'):
-            os.remove('zip_packages/Problem_' + problem_idx + '.zip')
         rmtree(packages_folder)
 
     print("Zipping package...\n")
-    make_archive('zip_packages/Problem_' + problem_idx, 'zip', problem_folder)
+    staging_archive = temp_root + '/Problem_' + problem_idx
+    make_archive(staging_archive, 'zip', problem_folder)
+    os.replace(staging_archive + '.zip', output_zip)
 
     print("Moving package to packages folder...\n")
     copytree(problem_folder, packages_folder)
 
     print("Done!\n")
-
     print("========================================\n")

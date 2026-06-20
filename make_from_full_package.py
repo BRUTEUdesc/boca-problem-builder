@@ -97,15 +97,18 @@ def validate_arguments(args):
     args (list of str): Command line arguments provided to the script.
 
     Returns:
-    tuple: Contains the validated problem index, file name, and time limit factors for Java and Python.
+    tuple: Contains the validated problem index, file name, time limit factors for Java and Python, and no_backup flag.
 
     Errors are handled by raising exceptions for specific invalid conditions and printing error messages before exiting.
     """
     try:
+        no_backup = '--no-backup' in args
+        args = [a for a in args if a != '--no-backup']
+
         # Check minimum number of arguments
         if len(args) < 3:
             raise ValueError("Usage: python3 make_from_full_package.py PROBLEM_LETTER POLYGON_PACKAGE.zip [java_tl_factor] ["
-                             "python_tl_factor]")
+                             "python_tl_factor] [--no-backup]")
 
         problem_idx = args[1]
         file_name = args[2]
@@ -126,7 +129,7 @@ def validate_arguments(args):
         if not file_name.endswith('.zip'):
             raise ValueError("The file must be a zip file.")
 
-        return problem_idx, file_name, java_tl_factor, python_tl_factor
+        return problem_idx, file_name, java_tl_factor, python_tl_factor, no_backup
     except Exception as e:
         print("Error:", e)
         sys.exit(1)
@@ -401,12 +404,13 @@ if __name__ == '__main__':
 
     check_run_directory()
 
-    problem_idx, file_name, java_tl_factor, python_tl_factor = validate_arguments(sys.argv)
+    problem_idx, file_name, java_tl_factor, python_tl_factor, no_backup = validate_arguments(sys.argv)
 
     ensure_dir_exists('packages')
     packages_folder = 'packages/Problem_' + problem_idx
 
-    ensure_dir_exists('backups')
+    if not no_backup:
+        ensure_dir_exists('backups')
     ensure_dir_exists('zip_packages')
     output_zip = 'zip_packages/Problem_' + problem_idx + '.zip'
     temp_root, problem_folder, polygon_folder = create_workspace(problem_idx)
@@ -455,8 +459,9 @@ if __name__ == '__main__':
     make_description(polygon_folder, xml_root, problem_folder, problem_idx)
 
     if os.path.exists(packages_folder):
-        print("Backing up previous package...\n")
-        backup(packages_folder, 'backups', problem_idx)
+        if not no_backup:
+            print("Backing up previous package...\n")
+            backup(packages_folder, 'backups', problem_idx)
         rmtree(packages_folder)
 
     print("Zipping package...\n")

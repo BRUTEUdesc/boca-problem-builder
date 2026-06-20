@@ -103,12 +103,13 @@ def validate_arguments(args):
     """
     try:
         no_backup = '--no-backup' in args
-        args = [a for a in args if a != '--no-backup']
+        zip_only = '--zip-only' in args
+        args = [a for a in args if a not in ('--no-backup', '--zip-only')]
 
         # Check minimum number of arguments
         if len(args) < 3:
             raise ValueError("Usage: python3 make_from_full_package.py PROBLEM_LETTER POLYGON_PACKAGE.zip [java_tl_factor] ["
-                             "python_tl_factor] [--no-backup]")
+                             "python_tl_factor] [--no-backup] [--zip-only]")
 
         problem_idx = args[1]
         file_name = args[2]
@@ -129,7 +130,7 @@ def validate_arguments(args):
         if not file_name.endswith('.zip'):
             raise ValueError("The file must be a zip file.")
 
-        return problem_idx, file_name, java_tl_factor, python_tl_factor, no_backup
+        return problem_idx, file_name, java_tl_factor, python_tl_factor, no_backup, zip_only
     except Exception as e:
         print("Error:", e)
         sys.exit(1)
@@ -404,12 +405,13 @@ if __name__ == '__main__':
 
     check_run_directory()
 
-    problem_idx, file_name, java_tl_factor, python_tl_factor, no_backup = validate_arguments(sys.argv)
+    problem_idx, file_name, java_tl_factor, python_tl_factor, no_backup, zip_only = validate_arguments(sys.argv)
 
-    ensure_dir_exists('packages')
     packages_folder = 'packages/Problem_' + problem_idx
 
-    if not no_backup:
+    if not zip_only:
+        ensure_dir_exists('packages')
+    if not no_backup and not zip_only:
         ensure_dir_exists('backups')
     ensure_dir_exists('zip_packages')
     output_zip = 'zip_packages/Problem_' + problem_idx + '.zip'
@@ -458,7 +460,7 @@ if __name__ == '__main__':
     print("Creating description files...\n")
     make_description(polygon_folder, xml_root, problem_folder, problem_idx)
 
-    if os.path.exists(packages_folder):
+    if not zip_only and os.path.exists(packages_folder):
         if not no_backup:
             print("Backing up previous package...\n")
             backup(packages_folder, 'backups', problem_idx)
@@ -469,8 +471,9 @@ if __name__ == '__main__':
     make_archive(staging_archive, 'zip', problem_folder)
     os.replace(staging_archive + '.zip', output_zip)
 
-    print("Moving package to packages folder...\n")
-    copytree(problem_folder, packages_folder)
+    if not zip_only:
+        print("Moving package to packages folder...\n")
+        copytree(problem_folder, packages_folder)
 
     print("Done!\n")
     print("========================================\n")

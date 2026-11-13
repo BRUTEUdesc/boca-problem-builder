@@ -151,7 +151,9 @@ cd "$cdir"
 [ -d /sys/kernel ] || /bin/mount -t sysfs sysfs /sys
 
 $sf -r1 -t$time -T$ttime -F256 -u256 -ostdout0 -estderr0 -U$bocau -G$bocag -n0 -C. -f20000 -d20000000 -m20000000 ./compileit.sh
-echo \$? > runit.retcode
+ret=\$?
+rm -f runit.retcode
+echo \$ret > runit.retcode
 if [ ! -d /bocajail ]; then
   /bin/umount /proc 2>/dev/null
   #/bin/umount /dev
@@ -160,7 +162,7 @@ fi
 EOF
     chmod 755 runit.sh
     chroot /bocajail "$cdir/runit.sh"
-    if [ -r runit.retcode ]; then
+    if [ -f runit.retcode ] && [ ! -L runit.retcode ]; then
     	ret=`cat runit.retcode`
     else
 		ret=99
@@ -182,7 +184,7 @@ if [ "$ret" != "0" ]; then
 	echo "Compilation Error: $ret"
 	exit $ret
 fi
-ret=`cat compileit.retcode`
+ret=`[ -f compileit.retcode ] && [ ! -L compileit.retcode ] && cat compileit.retcode`
 if [ "$ret" != "0" ]; then
 	echo "Compilation Error: $ret"
 	ret=1

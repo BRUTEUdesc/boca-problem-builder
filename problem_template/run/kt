@@ -148,6 +148,8 @@ fi
 export CLASSPATH=.:./run.jar:$CLASSPATH
 "$sf" -r$nruns -t$time -T$ttime -istdin0 -F512 -u512 -U$bocau -G$bocag -ostdout0 -estderr0 -n0 -C. -d40000000000 -m40000000000 -- "\$kotlin" run.jar -J-Xmx${maxm}K -J-Xss${maxms}K -J-Xms${maxm}K
 retval=\$?
+# o codigo do time ja terminou (safeexec mata o uid); um FIFO criado por ele aqui travaria o echo
+rm -f runit.retcode
 echo \$retval > runit.retcode
 if [ ! -d /bocajail ]; then
   /bin/umount /proc 2>/dev/null
@@ -157,7 +159,7 @@ fi
 EOF
     chmod 755 runit.sh
     chroot /bocajail "$cdir/runit.sh"
-	if [ -r runit.retcode ]; then
+	if [ -f runit.retcode ] && [ ! -L runit.retcode ]; then
     	ret=`cat runit.retcode`
 	fi
 	if [ "$ret" == "" ]; then
@@ -193,7 +195,7 @@ fi
 # #"$kotlin" -cp run.jar -J-Xmx${maxm}K -J-Xss${maxms}K -J-Xms${maxm}K "$name"
 # ret=$?
 if [ $ret -gt 10 ]; then
-    if [ -r stderr0 ]; then
+    if [ -f stderr0 ] && [ ! -L stderr0 ]; then
 	grep -q "not find or load main class" stderr0
 	if [ $? == 0 ]; then
 	    echo "> > > Nonzero return code - possible class name mismatch - do check < < <"

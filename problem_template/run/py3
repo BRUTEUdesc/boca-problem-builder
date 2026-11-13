@@ -127,6 +127,8 @@ if [ ! -x "\$python3" ]; then
 fi
 "$sf" -r$nruns -t$time -T$ttime -istdin0 -F256 -u256 -ostdout0 -estderr0 -U$bocau -G$bocag -n0 -C. -f$maxf -d$maxm -m$maxm -- "\$python3" "$name"
 retval=\$?
+# o codigo do time ja terminou (safeexec mata o uid); um FIFO criado por ele aqui travaria o echo
+rm -f runit.retcode
 echo \$retval > runit.retcode
 if [ ! -d /bocajail ]; then
   /bin/umount /proc 2>/dev/null
@@ -136,7 +138,7 @@ fi
 EOF
     chmod 755 runit.sh
     chroot /bocajail "$cdir/runit.sh"
-	if [ -r runit.retcode ]; then
+	if [ -f runit.retcode ] && [ ! -L runit.retcode ]; then
     	ret=`cat runit.retcode`
 	fi
 	if [ "$ret" == "" ]; then

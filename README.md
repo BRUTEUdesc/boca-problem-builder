@@ -38,6 +38,14 @@ No arquivo `contest.json`, nas opções de `POLYGON_PACKAGE` que estiverem marca
 O pacote gerado é um pacote pronto para ser utilizado no sistema de competições BOCA, testado na versão mais recente do BOCA (1.15.19+), mas deve funcionar na maioria.
 As linguagens aceitas para submissão são C, C++, Java, Kotlin e Python 3. O tempo limite de execução para cada problema é o mesmo que o tempo limite de execução do Polygon, multiplicado pelo fator especificado no script. O limite de memória é o mesmo que o do Polygon.
 
-O checker do Polygon (`check.cpp` com `testlib.h`) é compilado na geração do pacote (`g++ -O2 -std=c++23 -static`) e vai em `compare/check`, para o autojudge não compilar a cada submissão: é preciso rodar o script num Linux x86-64 com `g++` (no Ubuntu, `apt install g++`). Se o checker não compilar, o script para com erro. Problemas interativos e com entrada/saída por arquivo não são suportados e são recusados.
+O checker do Polygon (`check.cpp` com `testlib.h`) é compilado na geração do pacote (`g++ -O2 -std=c++23 -static`) e vai em `compare/check`, para o autojudge não compilar a cada submissão: é preciso rodar o script num Linux x86-64 com `g++` (no Ubuntu, `apt install g++`). Se o checker não compilar, o script para com erro. Problemas com entrada/saída por arquivo não são suportados e são recusados.
+
+Problemas interativos (interactor em C++ com testlib no `problem.xml`) usam `run/` e `compare/` de `problem_template_interactive/`, igual a `src/private/polygontemplate-interactive/` do BOCA. O interactor (`g++ -O2 -std=c++23 -static`) e o launcher `run/interact` (`gcc -O2 -static`, fonte em `run/interact.c`) são compilados na geração e vão no pacote. Para isso é preciso também o `gcc`.
+
+No autojudge, o launcher liga o interactor e a solução por dois pipes diretos, com os dois fixados na mesma CPU:
+- o interactor roda fora da jaula, como root, com limites de CPU, memória e arquivo;
+- a solução roda sob o safeexec, com os limites de sempre, numa só execução de TL/repetições, e com relógio de 2·TL+2 s.
+
+A entrada não é copiada para a jaula. TLE/RE/MLE da solução valem quando ela terminou antes do interactor. WA/PE do interactor dão Wrong Answer, e FAIL do interactor ou do checker dá "Contact staff". Com o interactor OK, o checker roda sobre a saída (tout) do interactor.
 
 No autojudge, a saída do checker vira: 0 → Accepted; 1 (WA) ou 2 (PE) → Wrong Answer; qualquer outra (3 = FAIL, crash) → "Checker failed", que o BOCA mostra como "Contact staff".

@@ -8,7 +8,7 @@ import os
 import xml.etree.ElementTree as eT
 import tempfile
 import zipfile
-from shutil import rmtree, copy, copytree, make_archive
+from shutil import rmtree, copy, copytree, make_archive, move
 
 
 def ensure_dir_exists(directory):
@@ -378,7 +378,7 @@ def create_workspace(problem_idx):
     Creates an isolated temporary workspace for a single conversion run.
     """
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
-    temp_root = tempfile.mkdtemp(prefix=f"boca_problem_{problem_idx}_{timestamp}_", dir='/tmp')
+    temp_root = tempfile.mkdtemp(prefix=f"boca_problem_{problem_idx}_{timestamp}_", dir='/var/tmp')  # /tmp pode ser tmpfs pequeno: pacotes grandes nao cabem
     problem_folder = temp_root + "/Problem_" + problem_idx
     polygon_folder = temp_root + '/polygon_package'
     os.makedirs(problem_folder)
@@ -469,7 +469,7 @@ if __name__ == '__main__':
     print("Zipping package...\n")
     staging_archive = temp_root + '/Problem_' + problem_idx
     make_archive(staging_archive, 'zip', problem_folder)
-    os.replace(staging_archive + '.zip', output_zip)
+    move(staging_archive + '.zip', output_zip)  # /tmp pode ser tmpfs: os.replace falha entre sistemas de arquivos
 
     if not zip_only:
         print("Moving package to packages folder...\n")

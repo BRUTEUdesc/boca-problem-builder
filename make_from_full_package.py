@@ -375,7 +375,7 @@ def compile_checker(compare_folder):
     Compiles compare/check.cpp into compare/check (static: the autojudge only runs it, no g++ per run).
     Exits with an error if it does not compile.
     """
-    cmd = ['g++', '-O2', '-std=c++17', '-static', '-o', 'check', 'check.cpp']
+    cmd = ['g++', '-O2', '-std=c++23', '-static', '-o', 'check', 'check.cpp']
     try:
         result = subprocess.run(cmd, cwd=compare_folder, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
                                 stderr=subprocess.PIPE, timeout=180, env=dict(os.environ, LC_ALL='C'))

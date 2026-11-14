@@ -52,7 +52,7 @@ fi
 if [ -f check.cpp ]; then
   if [ ! -x check ]; then
     rm -f check
-    g++ -O2 --std=c++17 -o check check.cpp
+    g++ -O2 -std=c++23 -o check check.cpp
   fi
   if [ ! -x check ]; then
     echo "Checker compile failed"
@@ -64,7 +64,7 @@ if [ -f check.cpp ]; then
     # o binario nao executa nesta maquina (formato/arquivo corrompido): compila do fonte, uma vez
     echo "Checker binary did not run (exit $ret), compiling check.cpp"
     rm -f check
-    g++ -O2 --std=c++17 -o check check.cpp
+    g++ -O2 -std=c++23 -o check check.cpp
     if [ ! -x check ]; then
       echo "Checker compile failed"
       exit 43

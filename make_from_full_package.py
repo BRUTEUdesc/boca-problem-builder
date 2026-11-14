@@ -5,6 +5,7 @@ from datetime import datetime
 from math import gcd
 import sys
 import os
+import subprocess
 import xml.etree.ElementTree as eT
 import tempfile
 import zipfile
@@ -353,6 +354,48 @@ def make_description(polygon_folder, xml_root, problem_folder, problem_idx):
         sys.exit(1)
 
 
+def check_supported(xml_root):
+    """
+    Refuses what the BOCA template cannot judge (it only runs the checker over stdin/stdout):
+    interactive problems and file input/output.
+    """
+    judging = xml_root.find('judging')
+    if xml_root.find('.//interactor') is not None:
+        print("Error: interactive problem (interactor in problem.xml) is not supported by BOCA.")
+        sys.exit(1)
+    for attr in ('input-file', 'output-file'):
+        value = (judging.attrib.get(attr, '') if judging is not None else '').strip()
+        if value != '':
+            print(f"Error: {attr}=\"{value}\" in problem.xml is not supported: BOCA only uses stdin/stdout.")
+            sys.exit(1)
+
+
+def compile_checker(compare_folder):
+    """
+    Compiles compare/check.cpp into compare/check (static: the autojudge only runs it, no g++ per run).
+    Exits with an error if it does not compile.
+    """
+    cmd = ['g++', '-O2', '-std=c++23', '-static', '-o', 'check', 'check.cpp']
+    try:
+        result = subprocess.run(cmd, cwd=compare_folder, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                                stderr=subprocess.PIPE, timeout=180, env=dict(os.environ, LC_ALL='C'))
+    except FileNotFoundError:
+        print("Error: g++ not found: the checker must be compiled when building the package.")
+        sys.exit(1)
+    except subprocess.TimeoutExpired:
+        print("Error: checker (check.cpp) compilation timed out (180 s).")
+        sys.exit(1)
+    if result.returncode != 0 or not os.path.isfile(compare_folder + '/check'):
+        # only the error lines (without the source excerpt g++ repeats); if there are none, the first ones
+        all_lines = [l.strip() for l in result.stderr.decode(errors='replace').splitlines() if l.strip()]
+        lines = [l for l in all_lines if 'error' in l.lower()][:5] or all_lines[:5]
+        print(f"Error: checker (check.cpp) does not compile with {' '.join(cmd[:-3])} (exit {result.returncode}):")
+        for line in lines:
+            print("  " + line)
+        sys.exit(1)
+    os.chmod(compare_folder + '/check', 0o755)
+
+
 def check_run_directory():
     """
     Ensures that the script is run from its own directory. Exits the program if it is not.
@@ -439,6 +482,7 @@ if __name__ == '__main__':
 
     xml_tree = eT.parse(polygon_folder + '/problem.xml')
     xml_root = xml_tree.getroot()
+    check_supported(xml_root)
 
     print("Creating input and output files...\n")
     make_inputs_outputs(xml_root, problem_folder, polygon_folder)
@@ -452,10 +496,11 @@ if __name__ == '__main__':
     limits_folder = problem_folder + '/limits'
     make_limits(limits_folder, repetitions, memory_limit, clang_timelimit, java_timelimit, python_timelimit)
 
-    print("Copying checker sources...\n")
+    print("Compiling checker...\n")
     compare_folder = problem_folder + '/compare'
     copy(polygon_folder + '/check.cpp', compare_folder + '/check.cpp')
     copy(polygon_folder + '/files/testlib.h', compare_folder + '/testlib.h')
+    compile_checker(compare_folder)
 
     print("Creating description files...\n")
     make_description(polygon_folder, xml_root, problem_folder, problem_idx)

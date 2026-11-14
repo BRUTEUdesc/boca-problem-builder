@@ -45,24 +45,43 @@ if [ ! -f checked_polygon ]; then
   fi
 fi
 
-if [ -f check.cpp ] && [ -f testlib.h ]; then
+# O conversor manda compare/check ja compilado (estatico) junto com o fonte; sem binario executavel
+# (pacote antigo), compila aqui. Saida do checker (testlib): 0 = ok, 1 = WA, 2 = PE (julgado como WA);
+# qualquer outra (3 = FAIL, crash, kill) e erro do checker ou da resposta do juiz: exit 43 (Contact staff).
+# O diff abaixo so vale para pacote sem check.cpp.
+if [ -f check.cpp ]; then
   if [ ! -x check ]; then
+    rm -f check
     g++ -O2 --std=c++17 -o check check.cpp
   fi
-  if [ -x check ]; then
+  if [ ! -x check ]; then
+    echo "Checker compile failed"
+    exit 43
+  fi
+  ./check "$3" "$1" "$2"
+  ret=$?
+  if [ "$ret" == "126" ] || [ "$ret" == "127" ]; then
+    # o binario nao executa nesta maquina (formato/arquivo corrompido): compila do fonte, uma vez
+    echo "Checker binary did not run (exit $ret), compiling check.cpp"
+    rm -f check
+    g++ -O2 --std=c++17 -o check check.cpp
+    if [ ! -x check ]; then
+      echo "Checker compile failed"
+      exit 43
+    fi
     ./check "$3" "$1" "$2"
     ret=$?
-    if [ "$ret" == "0" ]; then
-      echo "Accepted"
-      exit 4
-    fi
-    # if [ "$ret" == "2" ]; then
-    #   echo "Presentation Error"
-    #   exit 5
-    # fi
+  fi
+  if [ "$ret" == "0" ]; then
+    echo "Accepted"
+    exit 4
+  fi
+  if [ "$ret" == "1" ] || [ "$ret" == "2" ]; then
     echo "Wrong Answer"
     exit 6
   fi
+  echo "Checker failed (exit $ret)"
+  exit 43
 fi
 
 

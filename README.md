@@ -37,3 +37,7 @@ No arquivo `contest.json`, nas opções de `POLYGON_PACKAGE` que estiverem marca
 
 O pacote gerado é um pacote pronto para ser utilizado no sistema de competições BOCA, testado na versão mais recente do BOCA (1.15.19+), mas deve funcionar na maioria.
 As linguagens aceitas para submissão são C, C++, Java, Kotlin e Python 3. O tempo limite de execução para cada problema é o mesmo que o tempo limite de execução do Polygon, multiplicado pelo fator especificado no script. O limite de memória é o mesmo que o do Polygon.
+
+O checker do Polygon (`check.cpp` com `testlib.h`) é compilado na geração do pacote (`g++ -O2 -std=c++17 -static`) e vai em `compare/check`, para o autojudge não compilar a cada submissão: é preciso rodar o script num Linux x86-64 com `g++` (no Ubuntu, `apt install g++`). Se o checker não compilar, o script para com erro. Problemas interativos e com entrada/saída por arquivo não são suportados e são recusados.
+
+No autojudge, a saída do checker vira: 0 → Accepted; 1 (WA) ou 2 (PE) → Wrong Answer; qualquer outra (3 = FAIL, crash) → "Checker failed", que o BOCA mostra como "Contact staff".

@@ -174,7 +174,7 @@ int main(int argc, char **argv) {
 		signal(SIGPIPE, SIG_DFL); /* exec herda SIG_IGN; o time tem que poder morrer de SIGPIPE */
 		if (dup2(a[0], 0) < 0 || dup2(b[1], 1) < 0) _exit(127);
 		if (cpu >= 0) { cpu_set_t c; CPU_ZERO(&c); CPU_SET(cpu, &c); sched_setaffinity(0, sizeof c, &c); }
-		execv(sargv[0], sargv);
+		execvp(sargv[0], sargv); /* com PATH: o run/<lang> chama "chroot /bocajail ..." */
 		_exit(127);
 	}
 	setpgid(I.pid, I.pid);

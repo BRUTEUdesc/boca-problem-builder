@@ -1,0 +1,86 @@
+#!/bin/bash
+# ////////////////////////////////////////////////////////////////////////////////
+# //BOCA Online Contest Administrator
+# //    Copyright (C) 2003-2014 by BOCA System (bocasystem@gmail.com)
+# //
+# //    This program is free software: you can redistribute it and/or modify
+# //    it under the terms of the GNU General Public License as published by
+# //    the Free Software Foundation, either version 3 of the License, or
+# //    (at your option) any later version.
+# //
+# //    This program is distributed in the hope that it will be useful,
+# //    but WITHOUT ANY WARRANTY; without even the implied warranty of
+# //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# //    GNU General Public License for more details.
+# //    You should have received a copy of the GNU General Public License
+# //    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# ////////////////////////////////////////////////////////////////////////////////
+#
+# run/c e run/cpp de problema INTERATIVO (o conversor Polygon usa estes no lugar dos do template
+# quando o problem.xml tem interactor). Mesmo contrato do run/cpp normal:
+# $1 exe_file
+# $2 input_file
+# $3 timelimit (limit to run all the repetitions, by default only one repetition)
+# $4 number_of_repetitions_to_run (interativo: roda 1 vez com TL/$4)
+# $5 maximum allowed memory (in MBytes)
+# $6 maximum allowed output size (in KBytes)
+# stdout: o tout do interactor (o compare/<lang> le o veredito do interactor em run/verdict.X)
+# exit: 0 ok (veredito no compare), 2/9 RE, 3 TLE, 7 MLE, 43 erro do pacote/launcher
+# A logica comum (launcher, interactor, limites, veredito) esta em run/interactive.sh.
+
+umask 0022
+id -u bocajail >/dev/null 2>/dev/null
+if [ $? == 0 ]; then
+	bocau=`id -u bocajail`
+	bocag=`id -g bocajail`
+	chown bocajail.nogroup .
+else
+	bocau=`id -u nobody`
+	bocag=`id -g nobody`
+	chown nobody.nogroup .
+fi
+if [ "$bocau" == "" -o "$bocag" == "" ]; then
+	echo "error finding user to run script"
+	exit 43
+fi
+
+sf=`which safeexec`
+[ -x "$sf" ] || sf=/usr/bin/safeexec
+
+if [ "$1" == "" -o "$2" == "" -o "$3" == "" ]; then
+    echo "parameter problem"
+    exit 43
+fi
+if [ ! -x "$1" ]; then
+    echo "$1 not found (or is not in the current dir) or it's not executable"
+    exit 44
+fi
+if [ ! -r "$2" ]; then
+    echo "$2 not found (or is not in the current dir) or it's not readable"
+    exit 45
+fi
+if [ ! -x "$sf" ]; then
+    echo "$sf not found or it's not executable"
+    exit 46
+fi
+
+zipf=$(find "$(dirname "$(dirname "$0")")" -maxdepth 1 -type f -name '*.zip' | head -n 1)
+eval "$(unzip -p "$zipf" run/interactive.sh 2>/dev/null)"
+type ia_setup >/dev/null 2>&1 || { echo "interactive: run/interactive.sh nao encontrado no pacote"; exit 43; }
+ia_setup "$@"
+
+# sem "cp $2 stdin0": a entrada do interativo nao entra na jaula
+cp "$1" run.exe 2>/dev/null
+
+file run.exe | grep -iq "statically linked"
+if [ "$?" != "0" ]; then
+  echo "Aborting because $1 is not statically linked"
+  exit 47
+fi
+
+cdir=`pwd`
+echo "Current directory is $cdir -- chrooting on it" >&2
+# como o run/cpp normal, sem -i/-o (stdin/stdout sao os pipes) e com 1 repeticao de TL/N;
+# -Z: codigo de saida != 0 do programa conta como termino normal (o run/cpp normal faz ret=0)
+ia_run -Z -- "$sf" -F10 -f$maxf -r1 -n1 -R$cdir -C. -U$bocau -G$bocag -estderr0 -d$maxm -m$maxm -t$tl -T$wall ./run.exe
+ia_finish

@@ -1,0 +1,113 @@
+#!/bin/bash
+# ////////////////////////////////////////////////////////////////////////////////
+# //BOCA Online Contest Administrator
+# //    Copyright (C) 2003-2014 by BOCA System (bocasystem@gmail.com)
+# //
+# //    This program is free software: you can redistribute it and/or modify
+# //    it under the terms of the GNU General Public License as published by
+# //    the Free Software Foundation, either version 3 of the License, or
+# //    (at your option) any later version.
+# //
+# //    This program is distributed in the hope that it will be useful,
+# //    but WITHOUT ANY WARRANTY; without even the implied warranty of
+# //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# //    GNU General Public License for more details.
+# //    You should have received a copy of the GNU General Public License
+# //    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# ////////////////////////////////////////////////////////////////////////////////
+#
+# run/py3 de problema INTERATIVO (o conversor Polygon usa este no lugar do run/py3 do template
+# quando o problem.xml tem interactor). Mesmo contrato do run/py3 normal:
+# $1 main file
+# $2 input_file
+# $3 timelimit (limit to run all the repetitions, by default only one repetition)
+# $4 number_of_repetitions_to_run (interativo: roda 1 vez com TL/$4)
+# $5 maximum allowed memory (in MBytes)
+# $6 maximum allowed output size (in KBytes)
+# stdout: o tout do interactor (o compare/<lang> le o veredito do interactor em run/verdict.X)
+# exit: 0 ok (veredito no compare), 2/9 RE, 3 TLE, 7 MLE, 43 erro do pacote/launcher
+# A logica comum (launcher, interactor, limites, veredito) esta em run/interactive.sh.
+# Diferencas para o run/py3 normal: sem stdin0/stdout0 (o safeexec herda os pipes do launcher), o
+# runit.sh fica em run/ (0700) e devolve o codigo do safeexec como codigo de saida (o launcher le).
+
+umask 0022
+id -u bocajail >/dev/null 2>/dev/null
+if [ $? == 0 ]; then
+	bocau=`id -u bocajail`
+	bocag=`id -g bocajail`
+	chown bocajail.nogroup .
+else
+	bocau=`id -u nobody`
+	bocag=`id -g nobody`
+	chown nobody.nogroup .
+fi
+if [ "$bocau" == "" -o "$bocag" == "" ]; then
+	echo "error finding user to run script"
+	exit 43
+fi
+
+sf=`which safeexec`
+[ -x "$sf" ] || sf=/usr/bin/safeexec
+
+if [ "$1" == "" -o "$2" == "" -o "$3" == "" ]; then
+    echo "parameter problem"
+    exit 43
+fi
+name=`basename "$1"`
+if [ ! -r "$2" ]; then
+    echo "$2 not found (or is not in the current dir) or it's not readable"
+    exit 45
+fi
+if [ ! -x "$sf" ]; then
+    echo "$sf not found or it's not executable"
+    exit 46
+fi
+
+zipf=$(find "$(dirname "$(dirname "$0")")" -maxdepth 1 -type f -name '*.zip' | head -n 1)
+eval "$(unzip -p "$zipf" run/interactive.sh 2>/dev/null)"
+type ia_setup >/dev/null 2>&1 || { echo "interactive: run/interactive.sh nao encontrado no pacote"; exit 43; }
+ia_setup "$@"
+
+cdir=`pwd`
+echo "Current directory is $cdir" >&2
+echo $cdir | grep -q "/bocajail"
+if [ $? == 0 ]; then
+    cdir=`echo $cdir | sed "s/.*\/bocajail//"`
+    jrundir=`echo $rundir | sed "s/.*\/bocajail//"`
+    cat <<EOF2 > "$rundir/runit.sh"
+#!/bin/bash
+cd "$cdir"
+[ -f /proc/cpuinfo ] || /bin/mount -t proc proc /proc
+[ -d /sys/kernel ] || /bin/mount -t sysfs sysfs /sys
+python3=\`which python3\`
+[ -x "\$python3" ] || python3=/usr/bin/python3
+if [ ! -x "\$python3" ]; then
+    echo "\$python3 not found or it's not executable" >&2
+    exit 47
+fi
+"$sf" -r1 -t$tl -T$wall -F256 -u256 -estderr0 -U$bocau -G$bocag -n0 -C. -f$maxf -d$maxm -m$maxm -- "\$python3" "$name"
+retval=\$?
+if [ ! -d /bocajail ]; then
+  /bin/umount /proc 2>/dev/null
+  /bin/umount /sys 2>/dev/null
+fi
+# sem fechar stdin/stdout antes de sair: o interactor so pode ver EOF depois que o launcher
+# souber como a solucao terminou
+exit \$retval
+EOF2
+    chmod 700 "$rundir/runit.sh"
+    ia_run -- chroot /bocajail "$jrundir/runit.sh"
+else
+    echo "CODE NOT BEING CHROOTED. DO NOT RUN THIS ON THE MAIN SERVER" >&2
+    echo "CODE NOT BEING CHROOTED. DO NOT RUN THIS ON THE MAIN SERVER" >&2
+    echo "CODE NOT BEING CHROOTED. DO NOT RUN THIS ON THE MAIN SERVER" >&2
+	python3=`which python3`
+	[ -x "$python3" ] || python3=/usr/bin/python3
+	if [ ! -x "$python3" ]; then
+		echo "$python3 not found or it's not executable"
+		exit 47
+	fi
+	ia_run -- "$sf" -r1 -t$tl -T$wall -F256 -u256 -U$bocau -G$bocag -estderr0 -n0 -C. -d$maxm -m$maxm -f$maxf -- "$python3" "$name"
+fi
+# sem -Z: como no run/py3 normal, codigo != 0 do programa (safeexec > 10) vira RE (9)
+ia_finish

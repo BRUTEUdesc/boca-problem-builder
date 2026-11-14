@@ -1,0 +1,175 @@
+#!/bin/bash
+# ////////////////////////////////////////////////////////////////////////////////
+# //BOCA Online Contest Administrator
+# //    Copyright (C) 2003-2012 by BOCA Development Team (bocasystem@gmail.com)
+# //
+# //    This program is free software: you can redistribute it and/or modify
+# //    it under the terms of the GNU General Public License as published by
+# //    the Free Software Foundation, either version 3 of the License, or
+# //    (at your option) any later version.
+# //
+# //    This program is distributed in the hope that it will be useful,
+# //    but WITHOUT ANY WARRANTY; without even the implied warranty of
+# //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# //    GNU General Public License for more details.
+# //    You should have received a copy of the GNU General Public License
+# //    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# ////////////////////////////////////////////////////////////////////////////////
+# // Last modified 21/jul/2012 by cassio@ime.usp.br
+#
+# compare/<lang> de problema INTERATIVO (o conversor Polygon usa este no lugar do compare/<lang> do
+# template quando o problem.xml tem interactor): primeiro o veredito do interactor, depois o checker
+# do pacote sobre o tout, como o compare/<lang> normal.
+# This script receives:
+# $1 team_output (= stdout do run/<lang> = tout do interactor)
+# $2 sol_output
+# $3 problem_input (might be used by some specific checkers)
+#
+# BOCA reads the last line of the standard output
+# and pass it to judges
+#
+
+if [ ! -r "$1" ] || [ ! -r "$2" ]; then
+  echo "Parameter problem"
+  exit 43
+fi
+
+cd "$(dirname "$0")" || exit 46
+
+# Veredito do interactor, gravado como root pelo run/<lang> em run/verdict.X (diretorio 0700, fora do
+# alcance do time). TLE/RE/MLE da solucao nem chegam aqui: o run/<lang> sai com o codigo do safeexec
+# e o autojudging.php para antes do compare.
+v="../run/verdict.$(basename "$3")"
+if [ ! -f "$v" ] || [ -L "$v" ]; then
+  echo "Interactive: interactor verdict not found ($v)"
+  exit 43
+fi
+verdict=$(sed -n 1p "$v")
+msg=$(sed -n 2p "$v")
+case "$verdict" in
+  OK) ;;
+  WA) echo "Wrong Answer (interactor): $msg"; exit 6 ;;
+  # PE vira WA, como no checker abaixo (e no Codeforces)
+  PE) echo "Wrong Answer (interactor, format): $msg"; exit 6 ;;
+  JUDGE_ERROR) echo "Interactor failed (FAIL/crash): $msg"; exit 43 ;;
+  *) echo "Interactive: unexpected interactor verdict '$verdict': $msg"; exit 43 ;;
+esac
+# interactor deu OK: o checker do pacote (se houver) confere o tout, como no compare normal
+
+# Checking if there's a polygon checker and try to use it
+
+if [ ! -f checked_polygon ]; then
+  touch checked_polygon
+  zip_file=$(find .. -maxdepth 1 -type f -name '*.zip' | head -n 1)
+  if [ -f "$zip_file" ]; then 
+    unzip -j "$zip_file" "compare/check.cpp" -d . > /dev/null
+    unzip -j "$zip_file" "compare/check" -d . > /dev/null
+    unzip -j "$zip_file" "compare/testlib.h" -d . > /dev/null
+  fi
+fi
+
+# O conversor manda compare/check ja compilado (estatico) junto com o fonte; sem binario executavel
+# (pacote antigo), compila aqui. Saida do checker (testlib): 0 = ok, 1 = WA, 2 = PE (julgado como WA);
+# qualquer outra (3 = FAIL, crash, kill) e erro do checker ou da resposta do juiz: exit 43 (Contact staff).
+# O diff abaixo so vale para pacote sem check.cpp.
+if [ -f check.cpp ]; then
+  if [ ! -x check ]; then
+    rm -f check
+    g++ -O2 -std=c++23 -o check check.cpp
+  fi
+  if [ ! -x check ]; then
+    echo "Checker compile failed"
+    exit 43
+  fi
+  ./check "$3" "$1" "$2"
+  ret=$?
+  if [ "$ret" == "126" ] || [ "$ret" == "127" ]; then
+    # o binario nao executa nesta maquina (formato/arquivo corrompido): compila do fonte, uma vez
+    echo "Checker binary did not run (exit $ret), compiling check.cpp"
+    rm -f check
+    g++ -O2 -std=c++23 -o check check.cpp
+    if [ ! -x check ]; then
+      echo "Checker compile failed"
+      exit 43
+    fi
+    ./check "$3" "$1" "$2"
+    ret=$?
+  fi
+  if [ "$ret" == "0" ]; then
+    echo "Accepted"
+    exit 4
+  fi
+  if [ "$ret" == "1" ] || [ "$ret" == "2" ]; then
+    echo "Wrong Answer"
+    exit 6
+  fi
+  echo "Checker failed (exit $ret)"
+  exit 43
+fi
+
+
+# Next lines of this script just compares team_output and sol_output,
+# although it is possible to change them to more complex evaluations.
+
+diff -q "$1" "$2" >/dev/null 2>/dev/null
+if [ "$?" == "0" ]; then
+  echo -e "diff \"$1\" \"$2\" # files match"
+  echo "Files match exactly"
+  exit 4
+fi
+diff -q -b "$1" "$2" >/dev/null 2>/dev/null
+if [ "$?" == "0" ]; then
+  echo -e "diff -c -b \"$1\" \"$2\" # files match"
+  echo -e "diff -c \"$1\" \"$2\" # files dont match - see output"
+  diff -c "$1" "$2"
+  echo "Files match with differences in the amount of white spaces"
+  exit 5
+fi
+diff -q -b -B "$1" "$2" >/dev/null 2>/dev/null
+if [ "$?" == "0" ]; then
+  echo -e "diff -c -b -B \"$1\" \"$2\" # files match"
+  echo -e "diff -c -b \"$1\" \"$2\" # files dont match - see output"
+  diff -c -b "$1" "$2"
+  echo "Files match with differences in the amount of white spaces and blank lines"
+  exit 5
+fi
+diff -q -i -b -B "$1" "$2" >/dev/null 2>/dev/null
+if [ "$?" == "0" ]; then
+  echo -e "diff -c -i -b -B \"$1\" \"$2\" # files match"
+  echo -e "diff -c -b -B \"$1\" \"$2\" # files dont match - see output"
+  diff -c -b -B "$1" "$2"
+  echo "Files match if we ignore case and differences in the amount of white spaces and blank lines"
+  exit 5
+fi
+diff -q -b -B -w "$1" "$2" >/dev/null 2>/dev/null
+if [ "$?" == "0" ]; then
+  echo -e "diff -c -b -B -w \"$1\" \"$2\" # files match"
+  echo -e "diff -c -i -b -B \"$1\" \"$2\" # files dont match - see output"
+  diff -c -i -b -B "$1" "$2"
+  echo "Files match if we discard all white spaces"
+  exit 5
+fi
+diff -q -i -b -B -w "$1" "$2" >/dev/null 2>/dev/null
+if [ "$?" == "0" ]; then
+  echo -e "diff -c -i -b -B -w \"$1\" \"$2\" # files match"
+  echo -e "diff -c -b -B -w \"$1\" \"$2\" # files dont match - see output"
+  diff -c -b -B -w "$1" "$2"
+  echo "Files match if we ignore case and discard all white spaces"
+  exit 5
+fi
+wd=`which wdiff`
+if [ "$wd" != "" ]; then
+  wdiff \"$1\" \"$2\" >/dev/null 2>/dev/null
+  if [ "$?" == "0" ]; then
+    echo -e "wdiff \"$1\" \"$2\" # files match"
+    echo -e "diff -c -i -b -B -w \"$1\" \"$2\" # files dont match - see output" 
+    diff -c -i -b -B -w "$1" "$2"
+    echo "BUT Files match if we compare word by word, ignoring everything else, using wdiff"
+    echo "diff has a bug that, if a line contains a single space, this is not discarded by -w"
+    exit 5
+  fi
+fi
+echo -e "### files dont match - see output"
+diff -c -i -b -B -w "$1" "$2"
+echo "Differences found"
+exit 6

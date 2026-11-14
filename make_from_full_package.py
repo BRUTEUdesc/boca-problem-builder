@@ -354,20 +354,32 @@ def make_description(polygon_folder, xml_root, problem_folder, problem_idx):
         sys.exit(1)
 
 
-def check_supported(xml_root):
+def check_supported(xml_root, polygon_folder):
     """
-    Refuses what the BOCA template cannot judge (it only runs the checker over stdin/stdout):
-    interactive problems and file input/output.
+    Refuses what the BOCA template cannot judge (only stdin/stdout): file input/output, and
+    interactive problems whose interactor is not a C++ (testlib) source in the package.
+    Returns the interactor source path (relative to the package) or None for a normal problem.
     """
     judging = xml_root.find('judging')
+    interactor = None
     if xml_root.find('.//interactor') is not None:
-        print("Error: interactive problem (interactor in problem.xml) is not supported by BOCA.")
-        sys.exit(1)
+        inters = xml_root.findall('./assets/interactor')
+        source = inters[0].find('source') if len(inters) == 1 else None
+        interactor = os.path.normpath(source.attrib.get('path', '')) if source is not None else ''
+        itype = source.attrib.get('type', '') if source is not None else ''
+        if interactor in ('', '.') or interactor.startswith('..') or os.path.isabs(interactor) \
+                or not os.path.isfile(os.path.join(polygon_folder, interactor)):
+            print(f"Error: interactive problem: interactor source ('{interactor}') not found in the package.")
+            sys.exit(1)
+        if not itype.startswith('cpp.'):
+            print(f"Error: interactive problem: interactor in '{itype}'; only C++ (testlib) interactors are supported.")
+            sys.exit(1)
     for attr in ('input-file', 'output-file'):
         value = (judging.attrib.get(attr, '') if judging is not None else '').strip()
         if value != '':
             print(f"Error: {attr}=\"{value}\" in problem.xml is not supported: BOCA only uses stdin/stdout.")
             sys.exit(1)
+    return interactor
 
 
 def compile_checker(compare_folder):
@@ -375,25 +387,48 @@ def compile_checker(compare_folder):
     Compiles compare/check.cpp into compare/check (static: the autojudge only runs it, no g++ per run).
     Exits with an error if it does not compile.
     """
-    cmd = ['g++', '-O2', '-std=c++23', '-static', '-o', 'check', 'check.cpp']
+    compile_static(compare_folder, ['g++', '-O2', '-std=c++23', '-static'], 'check', 'check.cpp', 'checker')
+
+
+def compile_static(folder, cc, out, src, what):
+    """
+    Compiles folder/src into folder/out with the compiler command cc (list); what names the program
+    in the messages. Exits with an error if it does not compile.
+    """
+    cmd = cc + ['-o', out, src]
     try:
-        result = subprocess.run(cmd, cwd=compare_folder, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+        result = subprocess.run(cmd, cwd=folder, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
                                 stderr=subprocess.PIPE, timeout=180, env=dict(os.environ, LC_ALL='C'))
     except FileNotFoundError:
-        print("Error: g++ not found: the checker must be compiled when building the package.")
+        print(f"Error: {cc[0]} not found: the {what} must be compiled when building the package.")
         sys.exit(1)
     except subprocess.TimeoutExpired:
-        print("Error: checker (check.cpp) compilation timed out (180 s).")
+        print(f"Error: {what} ({src}) compilation timed out (180 s).")
         sys.exit(1)
-    if result.returncode != 0 or not os.path.isfile(compare_folder + '/check'):
+    if result.returncode != 0 or not os.path.isfile(folder + '/' + out):
         # only the error lines (without the source excerpt g++ repeats); if there are none, the first ones
         all_lines = [l.strip() for l in result.stderr.decode(errors='replace').splitlines() if l.strip()]
         lines = [l for l in all_lines if 'error' in l.lower()][:5] or all_lines[:5]
-        print(f"Error: checker (check.cpp) does not compile with {' '.join(cmd[:-3])} (exit {result.returncode}):")
+        print(f"Error: {what} ({src}) does not compile with {' '.join(cc)} (exit {result.returncode}):")
         for line in lines:
             print("  " + line)
         sys.exit(1)
-    os.chmod(compare_folder + '/check', 0o755)
+    os.chmod(folder + '/' + out, 0o755)
+
+
+def make_interactive(problem_folder, polygon_folder, interactor):
+    """
+    Interactive problem: run/ and compare/ of problem_template_interactive replace the template ones;
+    the interactor (with the package testlib.h) and the launcher are compiled static into run/.
+    """
+    for folder in os.listdir('problem_template_interactive'):
+        for f in os.listdir('problem_template_interactive/' + folder):
+            copy('problem_template_interactive/' + folder + '/' + f, problem_folder + '/' + folder + '/' + f)
+    run_folder = problem_folder + '/run'
+    copy(os.path.join(polygon_folder, interactor), run_folder + '/interactor.cpp')
+    copy(polygon_folder + '/files/testlib.h', run_folder + '/testlib.h')
+    compile_static(run_folder, ['g++', '-O2', '-std=c++23', '-static'], 'interactor', 'interactor.cpp', 'interactor')
+    compile_static(run_folder, ['gcc', '-O2', '-static'], 'interact', 'interact.c', 'interactive launcher')
 
 
 def check_run_directory():
@@ -482,7 +517,7 @@ if __name__ == '__main__':
 
     xml_tree = eT.parse(polygon_folder + '/problem.xml')
     xml_root = xml_tree.getroot()
-    check_supported(xml_root)
+    interactor = check_supported(xml_root, polygon_folder)
 
     print("Creating input and output files...\n")
     make_inputs_outputs(xml_root, problem_folder, polygon_folder)
@@ -501,6 +536,9 @@ if __name__ == '__main__':
     copy(polygon_folder + '/check.cpp', compare_folder + '/check.cpp')
     copy(polygon_folder + '/files/testlib.h', compare_folder + '/testlib.h')
     compile_checker(compare_folder)
+    if interactor is not None:
+        print("Interactive problem: compiling interactor and launcher...\n")
+        make_interactive(problem_folder, polygon_folder, interactor)
 
     print("Creating description files...\n")
     make_description(polygon_folder, xml_root, problem_folder, problem_idx)

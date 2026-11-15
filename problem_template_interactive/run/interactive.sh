@@ -1,5 +1,7 @@
 # Biblioteca comum dos run/<lang> de problema INTERATIVO (Polygon + testlib).
-# Vai dentro do zip do problema (run/interactive.sh); o run/<lang> a carrega com "unzip -p".
+# Vai dentro do zip do problema (run/interactive.sh) so quando o problem.xml tem interactor; o
+# run/<lang> e o compare/<lang> do template normal detectam o arquivo no zip e seguem o caminho
+# interativo (o run/<lang> a carrega com "unzip -p"). $maxm/$maxf/$bocau/$bocag/$sf vem do run/<lang>.
 #
 # O autojudging.php chama o run/<lang> como root, com cwd = $dir/tmp e:
 #   $1 executavel  $2 entrada ($dir/input/X)  $3 TL (total das repeticoes)  $4 repeticoes
@@ -46,8 +48,6 @@ ia_setup() {
 	# solucao sem flush nao prenderem cada teste por TL+30 s como no run normal.
 	tl=$(awk -v t="$3" -v r="${4:-1}" 'BEGIN{ if (r < 1) r = 1; if (t <= 0) t = 1; printf "%.3f", t / r }')
 	wall=$(awk -v t="$tl" 'BEGIN{ w = int(2 * t + 0.999) + 2; if (w < 3) w = 3; print w }')
-	maxm=512000; [ -n "$5" ] && [ "$5" -gt 0 ] && maxm=${5}000
-	maxf=1024;   [ -n "$6" ] && [ "$6" -gt 0 ] && maxf=$6
 	# memoria do interactor: 2x a do time, no minimo 1 GiB
 	imem=$(( ${5:-512} * 2 )); [ "$imem" -lt 1024 ] && imem=1024
 

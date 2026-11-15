@@ -126,7 +126,19 @@ if [ "$6" != "" ]; then
 fi
 
 rm -f runit.retcode 2>/dev/null
-cp "$2" stdin0 2>/dev/null
+# Problema interativo (o conversor poe run/interactive.sh no zip quando o problem.xml tem interactor):
+# a solucao conversa com o interactor por pipes, sem stdin0/stdout0, e roda 1 vez com TL/N; o resto
+# do script e o mesmo. A logica (launcher, interactor, limites, veredito) esta em run/interactive.sh.
+ia=; ia_pre=; sin=-istdin0; sout=-ostdout0
+zipf=$(find "$(dirname "$(dirname "$0")")" -maxdepth 1 -type f -name '*.zip' | head -n 1)
+if [ -f "$zipf" ] && unzip -l "$zipf" run/interactive.sh >/dev/null 2>&1; then
+  eval "$(unzip -p "$zipf" run/interactive.sh 2>/dev/null)"
+  type ia_setup >/dev/null 2>&1 || { echo "interactive: run/interactive.sh invalido no pacote"; exit 43; }
+  ia_setup "$@"
+  ia=1; ia_pre="ia_run --"; sin=; sout=; nruns=1; time=$tl; ttime=$wall
+else
+  cp "$2" stdin0 2>/dev/null
+fi
 
 cdir=`pwd`
 echo "Current directory is $cdir" >&2
@@ -146,7 +158,7 @@ if [ ! -x "\$java" ]; then
     exit 47
 fi
 export CLASSPATH=.:./run.jar:$CLASSPATH
-"$sf" -r$nruns -t$time -T$ttime -istdin0 -F256 -u256 -ostdout0 -estderr0 -U$bocau -G$bocag -n0 -C. -f20000 -d20000000 -m20000000 -- "\$java" -Xmx${maxm}K -Xss${maxms}K -Xms${maxm}K "$name"
+"$sf" -r$nruns -t$time -T$ttime $sin -F256 -u256 $sout -estderr0 -U$bocau -G$bocag -n0 -C. -f20000 -d20000000 -m20000000 -- "\$java" -Xmx${maxm}K -Xss${maxms}K -Xms${maxm}K "$name"
 retval=\$?
 # o codigo do time ja terminou (safeexec mata o uid); um FIFO criado por ele aqui travaria o echo
 rm -f runit.retcode
@@ -156,9 +168,11 @@ if [ ! -d /bocajail ]; then
   #/bin/umount /dev
   /bin/umount /sys 2>/dev/null
 fi
+exit \$retval
 EOF
     chmod 755 runit.sh
-    chroot /bocajail "$cdir/runit.sh"
+    $ia_pre chroot /bocajail "$cdir/runit.sh"
+    [ -n "$ia" ] && ia_finish
 	if [ -f runit.retcode ] && [ ! -L runit.retcode ]; then
     	ret=`cat runit.retcode`
 	fi
@@ -176,8 +190,9 @@ else
 		echo "$java not found or it's not executable"
 		exit 47
 	fi
-	"$sf" -r$nruns -t$time -T$ttime -istdin0 -F256 -u256 -U$bocau -G$bocag -ostdout0 -estderr0 -n0 -C. -d20000000 -m20000000 -- "$java" -cp run.jar -Xmx${maxm}K -Xss${maxms}K -Xms${maxm}K "$name"
+	$ia_pre "$sf" -r$nruns -t$time -T$ttime $sin -F256 -u256 -U$bocau -G$bocag $sout -estderr0 -n0 -C. -d20000000 -m20000000 -- "$java" -cp run.jar -Xmx${maxm}K -Xss${maxms}K -Xms${maxm}K "$name"
 	ret=$?
+	[ -n "$ia" ] && ia_finish
 fi
 if [ $ret -gt 10 ]; then
     if [ -f stderr0 ] && [ ! -L stderr0 ]; then

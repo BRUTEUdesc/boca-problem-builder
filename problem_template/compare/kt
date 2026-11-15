@@ -42,7 +42,29 @@ if [ ! -f checked_polygon ]; then
     unzip -j "$zip_file" "compare/check.cpp" -d . > /dev/null
     unzip -j "$zip_file" "compare/check" -d . > /dev/null
     unzip -j "$zip_file" "compare/testlib.h" -d . > /dev/null
+    unzip -l "$zip_file" run/interactive.sh > /dev/null 2>&1 && touch interactive
   fi
+fi
+
+# Problema interativo (zip com run/interactive.sh): primeiro o veredito do interactor, que o run/<lang>
+# grava como root em run/verdict.X (diretorio 0700). TLE/RE/MLE da solucao nem chegam aqui (o run sai
+# com o codigo do safeexec). Com OK, o checker do pacote confere o tout (= $1), como no normal.
+if [ -f interactive ]; then
+  v="../run/verdict.$(basename "$3")"
+  if [ ! -f "$v" ] || [ -L "$v" ]; then
+    echo "Interactive: interactor verdict not found ($v)"
+    exit 43
+  fi
+  verdict=$(sed -n 1p "$v")
+  msg=$(sed -n 2p "$v")
+  case "$verdict" in
+    OK) ;;
+    WA) echo "Wrong Answer (interactor): $msg"; exit 6 ;;
+    # PE vira WA, como no checker abaixo (e no Codeforces)
+    PE) echo "Wrong Answer (interactor, format): $msg"; exit 6 ;;
+    JUDGE_ERROR) echo "Interactor failed (FAIL/crash): $msg"; exit 43 ;;
+    *) echo "Interactive: unexpected interactor verdict '$verdict': $msg"; exit 43 ;;
+  esac
 fi
 
 # O conversor manda compare/check ja compilado (estatico) junto com o fonte; sem binario executavel

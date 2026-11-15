@@ -40,7 +40,7 @@ As linguagens aceitas para submissão são C, C++, Java, Kotlin e Python 3. O te
 
 O checker do Polygon (`check.cpp` com `testlib.h`) é compilado na geração do pacote (`g++ -O2 -std=c++23 -static`) e vai em `compare/check`, para o autojudge não compilar a cada submissão: é preciso rodar o script num Linux x86-64 com `g++` (no Ubuntu, `apt install g++`). Se o checker não compilar, o script para com erro. Problemas com entrada/saída por arquivo não são suportados e são recusados.
 
-Problemas interativos (interactor em C++ com testlib no `problem.xml`) usam `run/` e `compare/` de `problem_template_interactive/`, igual a `src/private/polygontemplate-interactive/` do BOCA. O interactor (`g++ -O2 -std=c++23 -static`) e o launcher `run/interact` (`gcc -O2 -static`, fonte em `run/interact.c`) são compilados na geração e vão no pacote. Para isso é preciso também o `gcc`.
+Problemas interativos (interactor em C++ com testlib no `problem.xml`) ganham `run/interactive.sh` e `run/interact.c` de `problem_template_interactive/` (igual a `src/private/polygontemplate-interactive/` do BOCA); os `run/<lang>` e `compare/<lang>` do template normal detectam o `run/interactive.sh` no zip e seguem o caminho interativo. O interactor (`g++ -O2 -std=c++23 -static`) e o launcher `run/interact` (`gcc -O2 -static`, fonte em `run/interact.c`) são compilados na geração e vão no pacote. Para isso é preciso também o `gcc`.
 
 No autojudge, o launcher liga o interactor e a solução por dois pipes diretos, com os dois fixados na mesma CPU:
 - o interactor roda fora da jaula, como root, com limites de CPU, memória e arquivo;

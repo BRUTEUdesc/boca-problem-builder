@@ -418,7 +418,8 @@ def compile_static(folder, cc, out, src, what):
 
 def make_interactive(problem_folder, polygon_folder, interactor):
     """
-    Interactive problem: run/ and compare/ of problem_template_interactive replace the template ones;
+    Interactive problem: run/interactive.sh and run/interact.c of problem_template_interactive go into
+    the package (the template run/<lang> and compare/<lang> detect run/interactive.sh in the zip);
     the interactor (with the package testlib.h) and the launcher are compiled static into run/.
     """
     for folder in os.listdir('problem_template_interactive'):

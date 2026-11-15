@@ -106,7 +106,19 @@ if [ "$6" != "" ]; then
   fi
 fi
 
-cp "$2" stdin0 2>/dev/null
+# Problema interativo (o conversor poe run/interactive.sh no zip quando o problem.xml tem interactor):
+# a solucao conversa com o interactor por pipes, sem stdin0/stdout0, e roda 1 vez com TL/N; o resto
+# do script e o mesmo. A logica (launcher, interactor, limites, veredito) esta em run/interactive.sh.
+ia=; ia_pre=; sin=-istdin0; sout=-ostdout0
+zipf=$(find "$(dirname "$(dirname "$0")")" -maxdepth 1 -type f -name '*.zip' | head -n 1)
+if [ -f "$zipf" ] && unzip -l "$zipf" run/interactive.sh >/dev/null 2>&1; then
+  eval "$(unzip -p "$zipf" run/interactive.sh 2>/dev/null)"
+  type ia_setup >/dev/null 2>&1 || { echo "interactive: run/interactive.sh invalido no pacote"; exit 43; }
+  ia_setup "$@"
+  ia=1; ia_pre="ia_run -Z --"; sin=; sout=; nruns=1; time=$tl; ttime=$wall
+else
+  cp "$2" stdin0 2>/dev/null
+fi
 cp "$1" run.exe 2>/dev/null
 
 file run.exe | grep -iq "statically linked"
@@ -117,8 +129,9 @@ fi
 
 cdir=`pwd`
 echo "Current directory is $cdir -- chrooting on it" >&2
-"$sf" -F10 -f$maxf -r$nruns -n1 -R$cdir -C. -U$bocau -G$bocag -ostdout0 -estderr0 -d$maxm -m$maxm -t$time -T$ttime -istdin0 ./run.exe
+$ia_pre "$sf" -F10 -f$maxf -r$nruns -n1 -R$cdir -C. -U$bocau -G$bocag $sout -estderr0 -d$maxm -m$maxm -t$time -T$ttime $sin ./run.exe
 ret=$?
+[ -n "$ia" ] && ia_finish
 if [ $ret -gt 10 ]; then
 	ret=0
 fi

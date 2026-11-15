@@ -58,7 +58,8 @@ if [ -f interactive ]; then
   verdict=$(sed -n 1p "$v")
   msg=$(sed -n 2p "$v")
   case "$verdict" in
-    OK) ;;
+    # sem checker no pacote (interativo montado a mao): vale o veredito do interactor, nao o diff de tout
+    OK) [ -f check.cpp ] || { echo "Accepted (interactor OK, no checker)"; exit 4; } ;;
     WA) echo "Wrong Answer (interactor): $msg"; exit 6 ;;
     # PE vira WA, como no checker abaixo (e no Codeforces)
     PE) echo "Wrong Answer (interactor, format): $msg"; exit 6 ;;
